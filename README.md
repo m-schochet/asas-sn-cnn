@@ -1,7 +1,7 @@
-# Stellar Rotation Period Prediction from ASAS-SN Light Curves using a Convolutional Neural Network
+# Stellar Rotation Period Prediction from the All-Sky Automated Survey for Supernovae Light Curves using Deep Learning
 #### AKA: asas-sn cnn
 
-This repository hosts all the code used in the development of the convolutional neural networkfrom Schochet & Planet et al. (in prep) "Stellar Rotation Period Prediction from ASAS-SN Light Curves using Deep Learning"
+This repository hosts all the code used in the development of the convolutional neural network from Schochet & Planet et al. (in prep) "Stellar Rotation Period Prediction from ASAS-SN Light Curves using Deep Learning"
 
 
 ## Repository Guide
