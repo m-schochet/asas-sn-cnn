@@ -10,3 +10,11 @@ Inside of this repository is a set of folders. Each of these folders are labeled
 ```
 [integer]-[name of workflow step]
 ```
+
+Additionally, each of these workflow steps hosts pairs of .sh/.py files, with the assumption being that these jobs are run into a Linux scheduler. This also explains why contained in each .sh file is a line of:
+
+```
+module load conda
+```
+
+because this is the standard method of "turning on conda" on the University of Florida HiPerGator computing cluster (learn more about HiPerGator here: https://docs.rc.ufl.edu/)
