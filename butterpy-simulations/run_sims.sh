@@ -8,8 +8,8 @@
 #SBATCH --time=08:00:00
 #SBATCH --output=output/%x-%A-%03a.out
 #SBATCH --error=output/%x-%A-%03a.err
-
 #SBATCH --array=0-999%100
+
 module load conda
 conda activate (NAME OF ENVIRONMENT HOSTING THE PACKAGES IN REQUIREMENTS.TXT)
 python run_sims.py $SLURM_ARRAY_TASK_ID
