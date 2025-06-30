@@ -8,6 +8,7 @@ from scipy import interpolate
 import pandas as pd
 import pyasassn
 from pyasassn.lightcurve import LightCurve
+import torch
 
 def read_sim(sim_id, reset_time=True):
     """Load full light curve from fits file and return time and flux.
@@ -95,3 +96,50 @@ def single_wavelet(self, flux_list, tradeoff=2):
     masked_wavelet = interpolate.griddata((no_mask_x, no_mask_y), newarr.ravel(), (xx, yy), method='cubic')
     
     return masked_wavelet
+
+def scaled_wavelet(
+        self, flux_list,
+        tradeoff=2,
+    ):
+    """
+    Constructs a wavelet-transform power spectrum of a single LightCurve Object and scales it into a 64x64 array of [0, 255] np.uint8 values.
+    
+    :param tt: Array of times at which to evaluate wavelet PS
+    :param ff: Array of frequencies at which to evaluate wavelet PS
+    
+    """
+    
+    data = self.data
+    x = data.jd
+    y = flux_list
+    e_y = data.flux_err
+    
+    tt = np.linspace(np.min(x), np.max(x), 128)
+    periods = np.arange(1, 30, 0.2275)
+    ff = 1/periods
+        
+    wavelet = LS_wavelet(tt, ff, x, y, e_y, gam=tradeoff)
+    
+    wave = wavelet.T
+    x_list = np.arange(0, wave.shape[1])
+    y_list = np.arange(0, wave.shape[0])
+    wavelet2 = np.ma.masked_invalid(wave)
+    xx, yy = np.meshgrid(x_list, y_list)
+    
+    no_mask_x = xx[~wavelet2.mask]
+    no_mask_y = yy[~wavelet2.mask]
+    newarr = wavelet2[~wavelet2.mask]
+    masked_wavelet = interpolate.griddata((no_mask_x, no_mask_y), newarr.ravel(), (xx, yy), method='cubic')
+    printer = masked_wavelet[np.newaxis, :]
+    power_tensor = torch.tensor(printer)
+    
+    pooled = torch.nn.functional.adaptive_avg_pool2d(power_tensor, output_size=(64, 64))
+    repooled = torch.squeeze(pooled)
+    
+    no_nans = torch.nan_to_num(repooled, posinf=0, neginf=0)
+    scaled_power = no_nans - no_nans.min()
+    scaled_power *= (255/scaled_power.max())
+    scaled_power *= 10
+    checked = torch.where(scaled_power > 255, 255, scaled_power)
+    power_int = checked.numpy().astype("uint8")
+    return power_int
