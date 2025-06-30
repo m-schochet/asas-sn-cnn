@@ -1,8 +1,8 @@
 from astropy.timeseries import LombScargle
 import butterpy as bp
-import numpy as np
 import lightkurve as lk
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 import pandas as pd
 import pyasassn
