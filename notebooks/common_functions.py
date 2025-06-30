@@ -10,10 +10,10 @@ import pyasassn
 from pyasassn.lightcurve import LightCurve
 import torch
 
-def read_sim(sim_id, reset_time=True):
+def read_sim(simfile, reset_time=True):
     """Load full light curve from fits file and return time and flux.
     """
-    sim_path = os.path.join(sim_dir, f"{sim_id//1000:03.0f}", f"sim{sim_id:06d}.fits")
+    sim_path = simfile
     lc = bp.read_fits(sim_path).lightcurve
     if reset_time:
         lc.time = lc.time - lc.time[0] + 2458484.5
