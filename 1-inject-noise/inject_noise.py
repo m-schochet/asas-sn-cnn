@@ -4,6 +4,7 @@ import warnings
 from glob import glob
 import numpy as np
 import pandas as pd
+from astropy.timeseries import LombScargle
 import pyasassn
 from pyasassn.lightcurve import LightCurve
 import butterpy as bp
