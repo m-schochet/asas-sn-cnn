@@ -1,13 +1,13 @@
-import numpy as np
 from astropy.timeseries import LombScargle
 import butterpy as bp
+import numpy as np
 import lightkurve as lk
-import torch
 import matplotlib.pyplot as plt
-from scipy import interpolate
+import os
 import pandas as pd
 import pyasassn
 from pyasassn.lightcurve import LightCurve
+from scipy import interpolate
 import torch
 
 def read_sim(simfile, reset_time=True):
