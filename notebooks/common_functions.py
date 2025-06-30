@@ -11,8 +11,10 @@ from scipy import interpolate
 import torch
 
 def read_sim(simfile, reset_time=True):
-    """Load full light curve from fits file and return time and flux.
     """
+    Load full light curve from fits file and return time and flux.
+    """
+    
     sim_path = simfile
     lc = bp.read_fits(sim_path).lightcurve
     if reset_time:
@@ -41,6 +43,7 @@ def LS_wavelet(tt, ff, x, y, e_y, gam=2):
     
     :return: A numpy array containing the wavelet power spectrum.
     """
+    
     tmin = 2458485
     tmax = 2460311
     acc = np.full((len(tt), len(ff)), np.nan)
@@ -145,9 +148,24 @@ def scaled_wavelet(
     return power_int
 
 def reduce(noisy_lc):
+    """
+    Do baseline data reductions by removing data points in the wrong filter/determined to be poor observations/before or after the times of analysis
+    """
+    
     noisy_lc.data = noisy_lc.data[noisy_lc.data["phot_filter"] == "g"]
     noisy_lc.data = noisy_lc.data[noisy_lc.data["quality"] == "G"]
     noisy_lc.data = noisy_lc.data[noisy_lc.data["mag_err"] < 99]
     noisy_lc.data = noisy_lc.data[noisy_lc.data["jd"] >= tmin] 
     noisy_lc.data = noisy_lc.data[noisy_lc.data["jd"] <= tmax]
     return noise_lc
+
+def inject_flux(sim, lightcurve):
+    """
+    Inject a simulation into a template light curve given the simulatiuon and lightkurve objects
+    """
+    nsim_lc = lk.LightCurve(time=sim.time, flux=sim.flux)
+    sim_window = (tmin <= sim_lc.time) & (sim_lc.time <= tmax)
+    sim_time = sim_lc.time[sim_window]
+    sim_flux = sim_lc.flux[sim_window]
+    new_flux = ((np.interp(lightcurve.jd, sim_time, sim_flux)) * lightcurve.flux) / np.median(lightcurve)
+    return new_flux
