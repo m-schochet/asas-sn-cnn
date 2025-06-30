@@ -157,15 +157,14 @@ def reduce(noisy_lc):
     noisy_lc.data = noisy_lc.data[noisy_lc.data["mag_err"] < 99]
     noisy_lc.data = noisy_lc.data[noisy_lc.data["jd"] >= tmin] 
     noisy_lc.data = noisy_lc.data[noisy_lc.data["jd"] <= tmax]
-    return noise_lc
+    return noisy_lc
 
 def inject_flux(sim, lightcurve):
     """
     Inject a simulation into a template light curve given the simulatiuon and lightkurve objects
     """
-    nsim_lc = lk.LightCurve(time=sim.time, flux=sim.flux)
-    sim_window = (tmin <= sim_lc.time) & (sim_lc.time <= tmax)
-    sim_time = sim_lc.time[sim_window]
-    sim_flux = sim_lc.flux[sim_window]
-    new_flux = ((np.interp(lightcurve.jd, sim_time, sim_flux)) * lightcurve.flux) / np.median(lightcurve)
+    sim_window = (tmin <= sim.time) & (sim.time <= tmax)
+    sim_time = sim.time[sim_window]
+    sim_flux = sim.flux[sim_window]
+    new_flux = ((np.interp(lightcurve.jd, sim_time, sim_flux)) * lightcurve.flux) / np.median(sim_flux)
     return new_flux
