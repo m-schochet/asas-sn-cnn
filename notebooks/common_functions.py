@@ -143,3 +143,11 @@ def scaled_wavelet(
     checked = torch.where(scaled_power > 255, 255, scaled_power)
     power_int = checked.numpy().astype("uint8")
     return power_int
+
+def reduce(noisy_lc):
+    noisy_lc.data = noisy_lc.data[noisy_lc.data["phot_filter"] == "g"]
+    noisy_lc.data = noisy_lc.data[noisy_lc.data["quality"] == "G"]
+    noisy_lc.data = noisy_lc.data[noisy_lc.data["mag_err"] < 99]
+    noisy_lc.data = noisy_lc.data[noisy_lc.data["jd"] >= tmin] 
+    noisy_lc.data = noisy_lc.data[noisy_lc.data["jd"] <= tmax]
+    return noise_lc
