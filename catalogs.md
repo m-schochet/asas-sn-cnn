@@ -10,7 +10,7 @@
 ### Convert MRT Tables to Astropy Tables using the following line
 ```
 from astropy.table import Table
-data = Table.read("(#location_of_mrt.txt_file", format="ascii.cds")
+data = Table.read("(#location_of_mrt.txt_file#)", format="ascii.cds")
 ```
 
 ## Sources of Extra Data
