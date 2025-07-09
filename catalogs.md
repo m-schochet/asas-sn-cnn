@@ -14,6 +14,6 @@ data = Table.read("(#location_of_mrt.txt_file#)", format="ascii.cds")
 ```
 
 ## Sources of Extra Data
-### Gaia DR3 (in general, must cite)
-### Kepler and TIC IDs have been collated with https://mastweb.stsci.edu/mcasjobs/ (must cite as well)
-### XG Boost Info from https://zenodo.org/records/7599789 (must cite Zenodo and paper: https://iopscience.iop.org/article/10.3847/1538-4365/acd53e)
+### Gaia DR3
+### Kepler and TIC IDs have been collated with https://mastweb.stsci.edu/mcasjobs/
+### XG Boost information was gathered from https://zenodo.org/records/7599789
