@@ -37,7 +37,7 @@ def LS_wavelet(tt, ff, x, y, e_y, gam=2):
     :param x: Time axis of input time series
     :param y: Dynamical quantity (e.g. fluxes) of input time series
     :param e_y: Measurement errors of input time series
-    :param Γ: tradeoff parameter between frequency and time resolution
+    :param gam: tradeoff parameter between frequency and time resolution
               (by Fourier uncertainty principle). Larger values give
               better frequency resolution.
     
@@ -69,7 +69,9 @@ def single_wavelet(self, flux_list, tradeoff=2):
     
     :param self: a LightCurve Object (re: https://github.com/asas-sn/skypatrol/blob/master/pyasassn/lightcurve.py / https://github.com/lightkurve/lightkurve/blob/main/src/lightkurve/lightcurve.py)
     :param flux: Array of flux values for the passing of an injected flux array in making a 2D wavelet transform
-    
+
+
+    :return: power_int, a 64x64 2D torch.Tensor object which holds the reshaped wavelet transform image, normed to values of [0, 255]    
     """
     
     data = self.data
@@ -97,19 +99,30 @@ def single_wavelet(self, flux_list, tradeoff=2):
     no_mask_y = yy[~wavelet2.mask]
     newarr = wavelet2[~wavelet2.mask]
     masked_wavelet = interpolate.griddata((no_mask_x, no_mask_y), newarr.ravel(), (xx, yy), method='cubic')
+    printer = masked_wavelet[np.newaxis, :]
+    power_tensor = torch.tensor(printer)
     
-    return masked_wavelet
+    pooled = torch.nn.functional.adaptive_avg_pool2d(power_tensor, output_size=(64, 64))
+    repooled = torch.squeeze(pooled)
+    
+    no_nans = torch.nan_to_num(repooled, posinf=0, neginf=0)
+    scaled_power = no_nans - no_nans.min()
+    scaled_power2 *= (255/scaled_power.max())
+    power_int = scaled_power2.numpy().astype("uint8")
+    return power_int
 
 def scaled_wavelet(
         self, flux_list,
         tradeoff=2,
     ):
     """
-    Constructs a wavelet-transform power spectrum of a single LightCurve Object and scales it into a 64x64 array of [0, 255] np.uint8 values.
+    Constructs a wavelet-transform power spectrum of a single LightCurve Object and scales it 10x its original power into a 64x64 array where any values greater
+    than 255 are set to 255 to normalize the array as [0, 255] np.uint8 values.
     
     :param tt: Array of times at which to evaluate wavelet PS
     :param ff: Array of frequencies at which to evaluate wavelet PS
-    
+
+    :return: power_int, a 64x64 2D torch.Tensor object which holds the reshaped wavelet transform image, normed to values of [0, 255] (and with power scaled to 10x normal)
     """
     
     data = self.data
