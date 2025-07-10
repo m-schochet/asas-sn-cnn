@@ -174,7 +174,7 @@ def reduce(noisy_lc):
 
 def inject_flux(sim, lightcurve):
     """
-    Inject a simulation into a template light curve given the simulatiuon and lightkurve objects
+    Inject a simulation into a template light curve given the simulation and lightkurve objects
     """
     sim_window = (tmin <= sim.time) & (sim.time <= tmax)
     sim_time = sim.time[sim_window]
