@@ -13,7 +13,6 @@
 from astropy.table import Table
 data = Table.read("(#location_of_mrt.txt_file#)", format="ascii.cds")
 data.write('(#save location of the MRT as a.csv#)', format='ascii.csv', overwrite=True)
-
 ```
 
 ## Sources of Extra Data
