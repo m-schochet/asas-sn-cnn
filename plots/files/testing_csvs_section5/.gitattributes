@@ -1,0 +1,10 @@
+*/*.csv filter=lfs diff=lfs merge=lfs -text
+5_milliquas_nor_norm_nan_all/*.csv filter=lfs diff=lfs merge=lfs -text
+5_milliquas_yesr_norm_nan_all/*.csv filter=lfs diff=lfs merge=lfs -text
+6_milliquas_yesr_norm_nan_all/*.csv filter=lfs diff=lfs merge=lfs -text
+6_milliquas_yesr_norm_min_all/*.csv filter=lfs diff=lfs merge=lfs -text
+6_milliquas_yesr_10x_nan_all/*.csv filter=lfs diff=lfs merge=lfs -text
+6_clump_nor_nan_all/*.csv filter=lfs diff=lfs merge=lfs -text
+6_clump_nor_norm_nan_all/*.csv filter=lfs diff=lfs merge=lfs -text
+simulation_input_30_log5.csv filter=lfs diff=lfs merge=lfs -text
+simulation_input_30_log6.csv filter=lfs diff=lfs merge=lfs -text
