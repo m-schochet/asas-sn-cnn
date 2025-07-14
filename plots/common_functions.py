@@ -155,8 +155,8 @@ def scaled_wavelet(
     no_nans = torch.nan_to_num(repooled, posinf=0, neginf=0)
     scaled_power = no_nans - no_nans.min()
     scaled_power2 = scaled_power *  (255/scaled_power.max())
-    scaled_power3= scaled_power2 * 10
-    checked = torch.where(scaled_power3 > 255, 255, scaled_power)
+    scaled_power3 = scaled_power2 * 10
+    checked = torch.where(scaled_power3 > 255, 255, scaled_power3)
     power_int = checked.numpy().astype("uint8")
     return power_int
 
@@ -188,7 +188,7 @@ def inject_flux(sim, lightcurve):
     
     return new_flux
 
-def plotter(wavelet, save):
+def plotter(wavelet, save=False, scaled_or_not = "not"):
     fig, ax = plt.subplots(figsize=(10,6))
     
     tmin = 2458485
@@ -207,16 +207,20 @@ def plotter(wavelet, save):
     tixs_yaxisperi = [periods[0], periods[4], periods[10], periods[40], periods[120]]
     labels_time = [1.0, 1.91, 3.27, 10.1, 28.3]
     
-    ax.imshow(wavelet, aspect='auto', extent=(tmin, tmax, np.min(ff), np.max(ff)), rasterized=True)
+    ax.imshow(wavelet, aspect='auto', extent=(tmin, tmax, np.min(ff), np.max(ff)), vmin=0, vmax=255, rasterized=True)
     ax.set_xlabel("Time", weight='bold')
     ax.set_ylabel("Frequency (1/day)", weight='bold')
     ax.set_xticks(ticks = tixs_xaxis, labels=labels_xaxis, weight='bold')
     ax.set_yticks(ticks = tixs_yaxisfreq, labels=labels_freqs, weight='bold')
     
     ax2 = ax.twinx()
-    ax2.imshow(wavelet, aspect='auto', extent=(tmin, tmax, np.min(ff), np.max(ff)), rasterized=True)
+    ax2.imshow(wavelet, aspect='auto', extent=(tmin, tmax, np.min(ff), np.max(ff)), vmin=0, vmax=255, rasterized=True)
     ax2.set_yticks(ticks = ax.get_yticks(), labels=labels_time, weight='bold')
     ax2.set_ylabel("Period (days)", weight='bold')
     if(save==True):
-    	fig.tight_layout()
-    	plt.savefig("transformation.pdf")
+        fig.tight_layout()
+        if(scaled_or_not=="yes"):
+            plt.savefig("scaledtransformation.pdf")
+        else:
+            plt.savefig("transformation.pdf")
+    plt.show()
