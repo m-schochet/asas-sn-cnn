@@ -107,7 +107,7 @@ def single_wavelet(self, flux_list, tradeoff=2):
     
     no_nans = torch.nan_to_num(repooled, posinf=0, neginf=0)
     scaled_power = no_nans - no_nans.min()
-    scaled_power2 *= (255/scaled_power.max())
+    scaled_power2 = scaled_power * (255/scaled_power.max())
     power_int = scaled_power2.numpy().astype("uint8")
     return power_int
 
@@ -154,9 +154,9 @@ def scaled_wavelet(
     
     no_nans = torch.nan_to_num(repooled, posinf=0, neginf=0)
     scaled_power = no_nans - no_nans.min()
-    scaled_power *= (255/scaled_power.max())
-    scaled_power *= 10
-    checked = torch.where(scaled_power > 255, 255, scaled_power)
+    scaled_power2 = scaled_power *  (255/scaled_power.max())
+    scaled_power3= scaled_power2 * 10
+    checked = torch.where(scaled_power3 > 255, 255, scaled_power)
     power_int = checked.numpy().astype("uint8")
     return power_int
 
@@ -164,20 +164,59 @@ def reduce(noisy_lc):
     """
     Do baseline data reductions by removing data points in the wrong filter/determined to be poor observations/before or after the times of analysis
     """
+    tmin = 2458485
+    tmax = 2460311
     
     noisy_lc.data = noisy_lc.data[noisy_lc.data["phot_filter"] == "g"]
     noisy_lc.data = noisy_lc.data[noisy_lc.data["quality"] == "G"]
     noisy_lc.data = noisy_lc.data[noisy_lc.data["mag_err"] < 99]
     noisy_lc.data = noisy_lc.data[noisy_lc.data["jd"] >= tmin] 
     noisy_lc.data = noisy_lc.data[noisy_lc.data["jd"] <= tmax]
+    
     return noisy_lc
 
 def inject_flux(sim, lightcurve):
     """
     Inject a simulation into a template light curve given the simulation and lightkurve objects
     """
+    tmin = 2458485
+    tmax = 2460311
     sim_window = (tmin <= sim.time) & (sim.time <= tmax)
     sim_time = sim.time[sim_window]
     sim_flux = sim.flux[sim_window]
     new_flux = ((np.interp(lightcurve.jd, sim_time, sim_flux)) * lightcurve.flux) / np.median(sim_flux)
+    
     return new_flux
+
+def plotter(wavelet, save):
+    fig, ax = plt.subplots(figsize=(10,6))
+    
+    tmin = 2458485
+    tmax = 2460311
+    
+    # Axis ticks and labels
+    periods = np.arange(1, 30, 0.2275)
+    ff = 1/periods
+    
+    tixs_xaxis = [2458604.5, 2459214.5,  2459792.5, 2460310.5]
+    labels_xaxis = ["5/1/2019", "1/1/2021", "8/1/2022", "1/1/2024"]
+    
+    tixs_yaxisfreq = [ff[0], ff[4], ff[10], ff[40], ff[120]]
+    labels_freqs = [1.0, 0.52, 0.31, 0.09, 0.04]
+    
+    tixs_yaxisperi = [periods[0], periods[4], periods[10], periods[40], periods[120]]
+    labels_time = [1.0, 1.91, 3.27, 10.1, 28.3]
+    
+    ax.imshow(wavelet, aspect='auto', extent=(tmin, tmax, np.min(ff), np.max(ff)), rasterized=True)
+    ax.set_xlabel("Time", weight='bold')
+    ax.set_ylabel("Frequency (1/day)", weight='bold')
+    ax.set_xticks(ticks = tixs_xaxis, labels=labels_xaxis, weight='bold')
+    ax.set_yticks(ticks = tixs_yaxisfreq, labels=labels_freqs, weight='bold')
+    
+    ax2 = ax.twinx()
+    ax2.imshow(wavelet, aspect='auto', extent=(tmin, tmax, np.min(ff), np.max(ff)), rasterized=True)
+    ax2.set_yticks(ticks = ax.get_yticks(), labels=labels_time, weight='bold')
+    ax2.set_ylabel("Period (days)", weight='bold')
+    if(save==True):
+    	fig.tight_layout()
+    	plt.savefig("transformation.pdf")
