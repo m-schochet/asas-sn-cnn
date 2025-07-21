@@ -1,0 +1,1 @@
+kepler_dr2_1arcsec.fits filter=lfs diff=lfs merge=lfs -text
