@@ -189,7 +189,7 @@ def inject_flux(sim, lightcurve):
     return new_flux
 
 def plotter(wavelet, save=False, scaled_or_not = "not"):
-    fig, ax = plt.subplots(figsize=(10,6))
+    fig, ax = plt.subplots(figsize=(10,6), layout='constrained')
     
     tmin = 2458485
     tmax = 2460311
@@ -201,24 +201,22 @@ def plotter(wavelet, save=False, scaled_or_not = "not"):
     tixs_xaxis = [2458604.5, 2459214.5,  2459792.5, 2460310.5]
     labels_xaxis = ["5/1/2019", "1/1/2021", "8/1/2022", "1/1/2024"]
     
-    tixs_yaxisfreq = [ff[0], ff[4], ff[10], ff[40], ff[120]]
-    labels_freqs = [1.0, 0.52, 0.31, 0.09, 0.04]
+    tixs_yaxisfreq = [ff[0], ff[4], ff[10], ff[120]]
+    labels_freqs = [1.0, 0.52, 0.31, 0.04]
     
-    tixs_yaxisperi = [periods[0], periods[4], periods[10], periods[40], periods[120]]
-    labels_time = [1.0, 1.91, 3.27, 10.1, 28.3]
+    labels_time = [1.0, 1.91, 3.27, 28.3]
     
     ax.imshow(wavelet, aspect='auto', extent=(tmin, tmax, np.min(ff), np.max(ff)), vmin=0, vmax=255, rasterized=True)
-    ax.set_xlabel("Time", weight='bold')
-    ax.set_ylabel("Frequency (1/day)", weight='bold')
+    fig.supxlabel("Time [d]", weight='bold')
+    ax.set_ylabel(r"Frequency [$\mathbf{\frac{1}{day}}$]", weight='bold')
     ax.set_xticks(ticks = tixs_xaxis, labels=labels_xaxis, weight='bold')
     ax.set_yticks(ticks = tixs_yaxisfreq, labels=labels_freqs, weight='bold')
     
     ax2 = ax.twinx()
     ax2.imshow(wavelet, aspect='auto', extent=(tmin, tmax, np.min(ff), np.max(ff)), vmin=0, vmax=255, rasterized=True)
     ax2.set_yticks(ticks = ax.get_yticks(), labels=labels_time, weight='bold')
-    ax2.set_ylabel("Period (days)", weight='bold')
+    ax2.set_ylabel("Period [day]", weight='bold')
     if(save==True):
-        fig.tight_layout()
         if(scaled_or_not=="yes"):
             plt.savefig("scaledtransformation.pdf")
         else:
