@@ -21,3 +21,9 @@ axes.labelcolor,'k'
 axes.edgecolor,'k'
 figure.facecolor,'none'
 legend.facecolor,'none'
+figure.labelsize,x-large
+figure.titlesize,x-large
+axes.labelsize,x-large
+axes.titlesize,x-large
+axes.labelweight,bold
+figure.labelweight,bold
