@@ -27,3 +27,4 @@ axes.labelsize,x-large
 axes.titlesize,x-large
 axes.labelweight,bold
 figure.labelweight,bold
+font.weight,bold
