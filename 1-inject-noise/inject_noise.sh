@@ -13,4 +13,4 @@
 
 module load conda
 conda activate (NAME OF ENVIRONMENT HOSTING THE PACKAGES IN REQUIREMENTS.TXT)
-ython -u inject_noise.py $SL:URM_ARRAY_TASK_ID
+python -u inject_noise.py $SLURM_ARRAY_TASK_ID
