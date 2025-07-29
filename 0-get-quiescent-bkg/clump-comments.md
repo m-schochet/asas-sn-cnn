@@ -1,6 +1,6 @@
 This folder hosts files for downloading milliquas light curves onto your machine. However, as discussed in Schochet & Planet et al. (in prep.)——training the final neural network on template milliquas light curves results in a significantly worse performing network than one that is trained on template star light curves. The ideal replacement selection is stars from ASAS-SN with minimal rotation in their light curves which can then be injected with butterpy simulations.
 
-Red clump and giant stars have been empirically shown to be slowly rotating (Ceillier (2017) found rapird rotation in ~2% of giant stars and ~15% of clump stars less massive than 1.1 solar masses, ref: https://www.aanda.org/articles/aa/full_html/2017/09/aa29884-16/aa29884-16.html)
+Red clump and giant stars have been empirically shown to be slowly rotating (Ceillier (2017) found rapid rotation in ~2% of giant stars and ~15% of clump stars less massive than 1.1 solar masses, ref: https://www.aanda.org/articles/aa/full_html/2017/09/aa29884-16/aa29884-16.html)
 
 Furthermore, Claytor et al. 2025 (submitted) attempted to expand the success of Claytor et al. (2024) on TESS data to Kepler data (which does not contain light curves for galaxies similar to TESS). As a result, they decided to curate a set of training templates using "slowly rotating giants and clump stars," selected through Gaia magnitude cutoffs.
 
