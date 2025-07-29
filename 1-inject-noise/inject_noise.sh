@@ -11,7 +11,6 @@
 #SBATCH --cpus-per-task=2
 #SBATCH --array=0-43
 
-
 module load conda
 conda activate (NAME OF ENVIRONMENT HOSTING THE PACKAGES IN REQUIREMENTS.TXT)
 ython -u inject_noise.py $SL:URM_ARRAY_TASK_ID
