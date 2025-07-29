@@ -13,8 +13,8 @@ import torch
 import matplotlib.pyplot as plt
 from scipy import interpolate
 
-sim_dir = "(#insert your save path for the simulated butterpy light curves here#)"
-saved_wavelets = "(#insert your save path for the saved injected light curves here#)"
+sim_dir = "(#insert your path for the simulated butterpy light curves here, which is the outpath variable from butterpy-simulations/run_sims.py#)"
+saved_wavelets = "(#insert your save path for the injected light curves here, which is from the create_folders.py job#)/training_wavelets"
 
 noisy_csv = "(#insert the location of the 'ids_sim_matched.csv' file output from 0.5-assign-sets/assign_sets.py#)"
 clump_df = pd.read_csv(noisy_csv).rename(columns={'noise_id':'asas_sn_id'})
