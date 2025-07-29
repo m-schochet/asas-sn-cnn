@@ -1,0 +1,17 @@
+#!/usr/bin/bash
+
+#SBATCH --job-name=(INSERT YOUR JOB NAME HERE)
+#SBATCH --qos=(INSERT YOUR RESOURCE ALLOCATION NAME HERE)
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=(INSERT YOUR EMAIL FOR JOB NOTIFICATIONS HERE)
+#SBATCH --output=output/%x-%A-%04a.out (ENSURE YOU HAVE A FOLDER NAMED `output` IN THE LOCATION YOU RUN THIS JOB)
+#SBATCH --error=output/%x-%A-%04a.err (ENSURE YOU HAVE A FOLDER NAMED `output` IN THE LOCATION YOU RUN THIS JOB)
+#SBATCH --time=10-00:00:00
+#SBATCH --mem=48GB
+#SBATCH --cpus-per-task=2
+#SBATCH --array=0-43
+
+
+module load conda
+conda activate (NAME OF ENVIRONMENT HOSTING THE PACKAGES IN REQUIREMENTS.TXT)
+ython -u inject_noise.py $SL:URM_ARRAY_TASK_ID
