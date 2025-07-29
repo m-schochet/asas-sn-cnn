@@ -1,0 +1,16 @@
+#!/usr/bin/bash
+
+#SBATCH --job-name=(INSERT YOUR JOB NAME HERE)
+#SBATCH --qos=(INSERT YOUR RESOURCE ALLOCATION NAME HERE)
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=(INSERT YOUR EMAIL FOR JOB NOTIFICATIONS HERE)
+#SBATCH --output=output/%x-%A-%04a.out (ENSURE YOU HAVE A FOLDER NAMED `output` IN THE LOCATION YOU RUN THIS JOB)
+#SBATCH --error=output/%x-%A-%04a.err (ENSURE YOU HAVE A FOLDER NAMED `output` IN THE LOCATION YOU RUN THIS JOB)
+#SBATCH --mem=24GB
+#SBATCH --time=01:00:00
+#SBATCH --output=output/%x-%A-%03a.out
+#SBATCH --error=output/%x-%A-%03a.err
+
+module load conda
+conda activate (NAME OF ENVIRONMENT HOSTING THE PACKAGES IN REQUIREMENTS.TXT)
+python -u combine.py $SLURM_ARRAY_TASK_ID
