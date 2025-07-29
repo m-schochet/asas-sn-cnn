@@ -6,7 +6,7 @@ Furthermore, Claytor et al. 2025 (submitted) attempted to expand the success of 
 
 Calculating absolute Gaia magnitudes as
 
-$M_{g}$ = g + 5 $\log$(p) - 10
+$M_{g}$ = g - 5 $\log$(p) + 5
 
 Where g is the provided Gaia absolute G-band magnitude and p is the provided Gaia parralax in milliarcseconds, we can then down select clump stars with absolute G-magnitudes between 0.5 and -1.5. Due to the enormous amount of ASAS-SN stars within these limits (of order 10 million), we can then randomly sample from these stars to select one million appropriate templates. However, this procedure is much more extensive due to the disperse nature of stars within the ASAS-SN databases, and so we recommend contacting the team in charge of ASAS-SN's servers to access the light curves of the clump stars used in our study.
 
