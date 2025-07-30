@@ -1,7 +1,8 @@
 # Stellar Rotation Period Prediction from the All-Sky Automated Survey for Supernovae Light Curves using Deep Learning
-#### AKA: asas-sn cnn
+#### AKA: asas-sn-cnn
 
-This repository hosts all the code used in the development of the convolutional neural network from Schochet & Planet et al. (in prep) "Stellar Rotation Period Prediction from ASAS-SN Light Curves using Deep Learning"
+## Primary Author and contact for issues: [Meir Schochet](mailto:schoche4@msu.edu).
+This repository hosts all the code used in the development of the convolutional neural network from Schochet & Planet et al. (in prep) "The ASAS-SN Rotation Period CNN (ARC) I: 200,000+ Deep Learning Inferred Stellar Rotation Periods from The All-Sky Automated Survey for Supernovae"
 
 
 ## Repository Guide
@@ -17,4 +18,10 @@ Additionally, each of these workflow steps hosts pairs of .sh/.py files, with th
 module load conda
 ```
 
-because this is the standard method of "turning on conda" on the University of Florida HiPerGator computing cluster (learn more about HiPerGator here: https://docs.rc.ufl.edu/)
+because this is the standard method of "turning on conda" on the University of Florida HiPerGator computing cluster (learn more about HiPerGator here: https://docs.rc.ufl.edu/). In folders where there are multiple job file pairs, we have included a markdown file which can be referenced to know the order in which the jobs were run.
+
+Furthermore, in each these .py files, pathnames are often reference via the following convention
+```
+"(# insert path here #)"
+```
+Any lines in these files which have this convention must be replaced with real paths on your machine before the jobs will properly run. Any place where a savepath for a file in one job is used as a loadpath for that same file in another job, we have done our best to note which exact paths we are referencing.
