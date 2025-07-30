@@ -1,7 +1,7 @@
 # Stellar Rotation Period Prediction from the All-Sky Automated Survey for Supernovae Light Curves using Deep Learning
 #### AKA: asas-sn-cnn
 
-### Primary Author and contact for issues: [Meir Schochet](mailto:schoche4@msu.edu).
+### Primary Author and contact for issues: [Meir Schochet](mailto:schoche4@msu.edu)
 This repository hosts all the code used in the development of the convolutional neural network from Schochet & Planet et al. (in prep) "The ASAS-SN Rotation Period CNN (ARC) I: 200,000+ Deep Learning Inferred Stellar Rotation Periods from The All-Sky Automated Survey for Supernovae"
 
 
