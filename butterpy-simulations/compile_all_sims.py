@@ -9,8 +9,7 @@ import pandas as pd
 src_path = "output"
 
 #save path for the csv
-dest_path = "(#INSERT THE PATH FOR WHERE YOU WANT TO SAVE THIS COMPILED .CSV FILE#)
-
+dest_path = "(#outpath variable from butterpy-simulations/run_sims.py#)"
 
 if __name__ == "__main__":
     files = sorted(glob(os.path.join(src_path, "*csv")))
