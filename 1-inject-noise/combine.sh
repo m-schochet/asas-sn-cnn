@@ -8,8 +8,6 @@
 #SBATCH --error=output/%x-%A-%04a.err (ENSURE YOU HAVE A FOLDER NAMED `output` IN THE LOCATION YOU RUN THIS JOB)
 #SBATCH --mem=24GB
 #SBATCH --time=01:00:00
-#SBATCH --output=output/%x-%A-%03a.out
-#SBATCH --error=output/%x-%A-%03a.err
 
 module load conda
 conda activate (NAME OF ENVIRONMENT HOSTING THE PACKAGES IN REQUIREMENTS.TXT)
