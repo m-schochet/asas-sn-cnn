@@ -11,8 +11,8 @@ from plots/files/common_functions import LS_wavelet, single_wavelet
 
 def run(jobid):
     jobid = int(jobid)
-    index_path = "(#the location of the edited index files from 3-transform-asassn/index_fix.py#)"
-    data_path = "(#the location of the data files, identically to in 1-inject-noise/inject_noise.py#)"
+    index_path = "(#the new_path variable from 3-transform-asassn/index_fix.py#)"
+    data_path = "(#the location of the data files=#)"
     save_path = "(#the location to save all of the transformed files#)"
 
     data_files = os.path.join(data_path, f"data_{str(jobid).zfill(4)}.parq")
