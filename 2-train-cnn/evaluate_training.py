@@ -12,12 +12,11 @@ run_name = "asassn"
 run_number = int(sys.argv[1])
 run_path = f"{run_name}_{run_number}"
 
-dataroot = os.path.join((#insert your save path for the injected light curves here, which is from the create_folders.py job#), "training_wavelets")
+dataroot = '(#outpath variable from 1-inject-noise/create_folders.py, except the f"{jobid:03d}" part. only up until training_wavelets#)'
 datapath = os.path.join(dataroot, "all_wavelets.npy")
-outpath = "(#input path to save evaluation output csvs#)
+outpath = "(#input path to save evaluation output csvs#)"
 
 pmax = int(30)
-
 
 class WaveletDataset(Dataset):
     """Face Landmarks dataset."""
