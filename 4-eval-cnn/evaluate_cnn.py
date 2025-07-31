@@ -13,11 +13,16 @@ run_name = "asassn"
 run_number = int(sys.argv[1])
 run_saver = f"{run_name}_{run_number}"
 
-run_path = "(#path to saved network files from 2-train-cnn#)"
+run_path = "(#output_path variable from 2-train-cnn/cnn_train)"
 pmax = int(30)
 
 class WaveletDataset(Dataset):
-    """Face Landmarks dataset."""
+    """
+    Wavelet transform dataset <'class'>
+
+    used to compile our transforms and load them into the CNN for evaluation
+    
+    """
 
     def __init__(self, data_path):
         self.data_frame = np.sort(np.load(data_path, mmap_mode='r'))
@@ -36,15 +41,22 @@ class WaveletDataset(Dataset):
 
 if __name__ == "__main__":
     for i in range(0, 1090, 1):
+        # this runs out to 1090 due to the ASAS-SN datafiles used for this work being subdivided into 
+        # 1091 index/data file pairs. Loop length can adjust depending on source data size at any future time.
+        
         try:
             os.chdir("(#save path for evaluation csv files#)")
             os.mkdir(f"{str(i).zfill(4)}")
+            os.chdir(f"{str(i).zfill(4)}")
+            outpath = os.curdir
             print("Directory created successfully", file=sys.stdout)
         except FileExistsError:
             print("Directory already exists", file=sys.stdout)
-        dataroot = os.path.join("(#save_path from 3-transform-asassn/transform_all.py#)", str(i).zfill(4))
+            os.chdir(f"{str(i).zfill(4)}")
+            outpath = os.curdir
+            
+        dataroot = os.path.join("(#save_path variable from 3-transform-asassn/transform_all.py#)", str(i).zfill(4))
         datapath = os.path.join(dataroot, "all_wavelets.npy")
-        outpath = "(#insert save path from the os.mkdir command above#)"
 
         data = WaveletDataset(data_path=datapath)
         loader = torch.utils.data.DataLoader(data, batch_size=22)
@@ -52,12 +64,20 @@ if __name__ == "__main__":
         list_of_files = sorted(glob(os.path.join(dataroot, "*.npy")))
         list_of_filenames = [file for file in list_of_files if 'all_wavelets' not in file]
         ids = []
-        for obj in lister: (#This loop is meant to collect the ID for each object in the all_wavelets file, so these lines NEED to be adjusted depending on your save paths and the total # of characters before the ID in the filename)
+        for obj in lister:
+            #NOTE: This is a janky loop meant to collect the ID for each object in the all_wavelets file, 
+            #      by scraping them from the file names themselves (poor programming in retrospect)
+            #      as a result, these lines NEED to be adjusted depending on your save paths and the 
+            #      total # of characters you are trying to identify before the ID in the filename
+            
             index = obj.find("(#text in path that comes right before the file with an object's ID in the name#)/")
+            # the string input above will be x characters long + 1 from the forward slash, call this intA
             index2 = obj.find("_wt")
-            string_id = str(obj[index+(number of characters in index + 5):index2])
+            
+            string_id = str(obj[index+('{#number of characters in intA #})' + 5):index2])
+            # the +5 here accounts for the added 4 digits of the datapath from the str(i).zfill(4) call and another forward slash to the final folder
+            
             ids.append(string_id)
-
     
     	if run_number == 0:
             c = [8, 16, 32]
@@ -69,7 +89,6 @@ if __name__ == "__main__":
             c = [64, 128, 256]
     
         modelpath = os.path.join(run_path, "models", run_name+".pt")
-    
     	model = ConvNet(c=c)
     
     	cuda = torch.cuda.is_available()
