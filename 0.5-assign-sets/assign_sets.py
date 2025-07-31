@@ -47,10 +47,7 @@ def map_noise(noise_ids, N_sims=1000000, weights=[8, 1, 1]):
     return noise_match
     
 def main():
-    noise_path = "(#INSERT THE LOCATION OF THE CSV WITH THE IDs OF THE OBJECTS YOU WILL TRAIN YOUR NETWORK ON#)" # for this project, this would be formatted like asas-sn-cnn/0-get-quiescent-bkg/asas-sn_training_stars.txt, but simply as a .csv file 
-    noise_df = pd.read_csv(noise_path)
-    useable_objects = noise_df.reset_index().drop(labels="index", axis=1) # drop the top row from the .csv file if there is a column label. otherwise, replace this line with `useable_objects = noise_df.reset_index()`
-    id_list = useable_objects.asas_sn_id.to_list() # turn the IDs into a list for comprehension by the map function
+    noise_path = np.loadtxt(os.path.join(('#insert save path for this file#'), "0-get-quiescent-bkg/asas-sn_training_stars.txt").tolist()
     noise = map_noise(id_list)
     save_path = "(#INSERT THE LOCATION WHERE YOU WANT TO SAVE THE CSV OF CROSS MATCHED Simulation-IDs-Set GROUPINGS")
     saved_path = os.path.join(save_path, "ids_sim_matched.csv")
