@@ -21,11 +21,11 @@ early_stopping_patience = 20
 run_name = "asassn"
 run_number = int(sys.argv[1])
 
-data_path = "(#insert your save path for the injected light curves here, which is from the create_folders.py job#)/training_wavelets"
-sim_input = "(#insert your path for the simulated butterpy light curves here, which is the outpath variable from butterpy-simulations/run_sims.py#)"
+data_path = '(#outpath variable from 1-inject-noise/create_folders.py, except the f"{jobid:03d}" part. only up until training_wavelets#)'
+sim_input = "(#outpath variable from butterpy-simulations/run_sims.py#)"
 
-#output cnns will thus be labeled "asassn0" - "asassn3"
-output_path = "(#insert here the name of the folder for holding the output trained cnn files#)" + run_name + f"_{run_number}"
+output_path = "(#insert here the output folder name for the trained cnn files#)" + run_name + f"_{run_number}"
+#output cnns will thus be labeled "asassn0" - "asassn3" for the code as is
 
 pmax = int(30) #output activation cares abt this value, this scales all our periods between 0-1
 
@@ -48,7 +48,7 @@ class WaveletDataset(Dataset):
             mmap_mode='r'
         )
 
-        labels = pd.read_csv(os.path.join(sim_input, "(#insert here the path to the saved .csv file of simulation parameters which is dest_path/sim_input.csv from butterpy-simulations/compile_all_sims.py#)"))["period"].values
+        labels = pd.read_csv(os.path.join("(#dest_path variable from butterpy-simulationss/compile_all_sims.py#)",  "sim_input.csv"))["period"].values
         
         if mode == "train":
             data = data[:800000]
@@ -110,6 +110,7 @@ def train(model, device, train_loader, val_loader,
     '''Train the neural network for all desired epochs.
     '''
     optimizer = optim.Adam(model.parameters(), lr=1e-5) #maybe change by orders of 10, too big or too small can affect learning
+    
     # Set learning rate scheduler
     scheduler = ReduceLROnPlateau(optimizer, factor=0.7, patience=3)
 
