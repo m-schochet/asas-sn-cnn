@@ -1,6 +1,6 @@
 astropy>=6.1.2
 astroquery>=0.4.10
-butterpy>=1.0.0 (must be installed by pip, re: https://github.com/zclaytor/butterpy)
+butterpy>=1.0.0
 lightkurve>=2.4.2
 matplotlib>=3.9.2
 numpy>=1.26.4
@@ -8,7 +8,7 @@ pandas>=2.2.2
 pip>=24.2
 polars>=1.22.0
 requests>=2.32.4
-skypatrol>=0.6.16 (must be installed by pip, re: https://github.com/asas-sn/skypatrol)
+skypatrol>=0.6.16
 torch>=2.4.0
 tqdm>=4.66.5
 copy
