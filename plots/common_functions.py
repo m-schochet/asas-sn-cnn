@@ -63,15 +63,18 @@ def LS_wavelet(tt, ff, x, y, e_y, gam=2):
     return acc
 
 
-def single_wavelet(self, flux_list, tradeoff=2):
+def single_wavelet(self, flux_list, min=False, scaled=False, tradeoff=2):
     """
     Constructs a 2D wavelet-transform power spectrum of a single LightCurve Object.
     
-    :param self: a LightCurve Object (re: https://github.com/asas-sn/skypatrol/blob/master/pyasassn/lightcurve.py / https://github.com/lightkurve/lightkurve/blob/main/src/lightkurve/lightcurve.py)
-    :param flux: Array of flux values for the passing of an injected flux array in making a 2D wavelet transform
+    :param self: a LightCurve Object (re: https://github.com/asas-sn/skypatrol/blob/master/pyasassn/lightcurve.py / https://github.com/lightkurve/lightkurve/blob/main/src/lightkurve/lightcurve.py).
+    :param flux: Array of flux values for the passing of an injected flux array in making a 2D wavelet transform.
+    :param min: (Default: False) boolean, whether the transform should be min-masked (non-used method).
+    :param scaled: (Default: False) boolean, whether the transform should be scaled 10x average power and capped at [0, 255] (non-used method). 
+    :param tradeoff: int value to represent tradeoff between frequency/time resolution in the transformation (preset to 2 in Schochet et al.).
 
 
-    :return: power_int, a 64x64 2D torch.Tensor object which holds the reshaped wavelet transform image, normed to values of [0, 255]    
+    :return: power_int, a 64x64 2D torch.Tensor object which holds the reshaped wavelet transform image, normed to values of [0, 255]    .
     """
     
     data = self.data
@@ -91,6 +94,7 @@ def single_wavelet(self, flux_list, tradeoff=2):
     
     # do 2D interpolative masking to cover with a mask at NaN/-inf/+inf values
     wave = wavelet.T
+
     x_list = np.arange(0, wave.shape[1])
     y_list = np.arange(0, wave.shape[0])
     wavelet2 = np.ma.masked_invalid(wave)
@@ -98,7 +102,11 @@ def single_wavelet(self, flux_list, tradeoff=2):
     no_mask_x = xx[~wavelet2.mask]
     no_mask_y = yy[~wavelet2.mask]
     newarr = wavelet2[~wavelet2.mask]
-    masked_wavelet = interpolate.griddata((no_mask_x, no_mask_y), newarr.ravel(), (xx, yy), method='cubic')
+    if (min==True):
+        minimum = np.nanmin(wave)
+        masked_wavelet = interpolate.griddata((no_mask_x, no_mask_y), newarr.ravel(), (xx, yy), method='cubic', fill_value=minimum)
+    else:
+        masked_wavelet = interpolate.griddata((no_mask_x, no_mask_y), newarr.ravel(), (xx, yy), method='cubic')
     printer = masked_wavelet[np.newaxis, :]
     power_tensor = torch.tensor(printer)
     
@@ -108,57 +116,12 @@ def single_wavelet(self, flux_list, tradeoff=2):
     no_nans = torch.nan_to_num(repooled, posinf=0, neginf=0)
     scaled_power = no_nans - no_nans.min()
     scaled_power2 = scaled_power * (255/scaled_power.max())
-    power_int = scaled_power2.numpy().astype("uint8")
-    return power_int
-
-def scaled_wavelet(
-        self, flux_list,
-        tradeoff=2,
-    ):
-    """
-    Constructs a wavelet-transform power spectrum of a single LightCurve Object and scales it 10x its original power into a 64x64 array where any values greater
-    than 255 are set to 255 to normalize the array as [0, 255] np.uint8 values.
-    
-    :param tt: Array of times at which to evaluate wavelet PS
-    :param ff: Array of frequencies at which to evaluate wavelet PS
-
-    :return: power_int, a 64x64 2D torch.Tensor object which holds the reshaped wavelet transform image, normed to values of [0, 255] (and with power scaled to 10x normal)
-    """
-    
-    data = self.data
-    x = data.jd
-    y = flux_list
-    e_y = data.flux_err
-    
-    tt = np.linspace(np.min(x), np.max(x), 128)
-    periods = np.arange(1, 30, 0.2275)
-    ff = 1/periods
-        
-    wavelet = LS_wavelet(tt, ff, x, y, e_y, gam=tradeoff)
-    
-    wave = wavelet.T
-    x_list = np.arange(0, wave.shape[1])
-    y_list = np.arange(0, wave.shape[0])
-    wavelet2 = np.ma.masked_invalid(wave)
-    xx, yy = np.meshgrid(x_list, y_list)
-    
-    no_mask_x = xx[~wavelet2.mask]
-    no_mask_y = yy[~wavelet2.mask]
-    newarr = wavelet2[~wavelet2.mask]
-    masked_wavelet = interpolate.griddata((no_mask_x, no_mask_y), newarr.ravel(), (xx, yy), method='cubic')
-    printer = masked_wavelet[np.newaxis, :]
-    power_tensor = torch.tensor(printer)
-    
-    pooled = torch.nn.functional.adaptive_avg_pool2d(power_tensor, output_size=(64, 64))
-    repooled = torch.squeeze(pooled)
-    
-    no_nans = torch.nan_to_num(repooled, posinf=0, neginf=0)
-    scaled_power = no_nans - no_nans.min()
-    scaled_power2 = scaled_power *  (255/scaled_power.max())
-    scaled_power3 = scaled_power2 * 10
-    checked = torch.where(scaled_power3 > 255, 255, scaled_power3)
-    power_int = checked.numpy().astype("uint8")
-    return power_int
+    if (scaled==True):
+        scaled_power3 = scaled_power2 * 10
+        final_wavelet = torch.where(scaled_power3 > 255, 255, scaled_power3)
+    else:
+        final_wavelet = scaled_power2.numpy().astype("uint8")
+    return final_wavelet
 
 def reduce(noisy_lc):
     """
@@ -188,7 +151,7 @@ def inject_flux(sim, lightcurve):
     
     return new_flux
 
-def plotter(wavelet, save=False, scaled_or_not = "not"):
+def plotter(wavelet, save=False, minimum = "not", scaled = "not"):
     fig, ax = plt.subplots(figsize=(10,6), layout='constrained')
     
     tmin = 2458485
@@ -217,8 +180,10 @@ def plotter(wavelet, save=False, scaled_or_not = "not"):
     ax2.set_yticks(ticks = ax.get_yticks(), labels=labels_time, weight='bold')
     ax2.set_ylabel("Period [day]", weight='bold')
     if(save==True):
-        if(scaled_or_not=="yes"):
-            plt.savefig("scaledtransformation.pdf")
+        if(scaled=="yes"):
+            plt.savefig("scaled10x_transformation.pdf")
+        elif(minimum=="yes"):
+            plt.savefig("minmask_transformation.pdf")
         else:
-            plt.savefig("transformation.pdf")
+            plt.savefig("regular_transformation.pdf")
     plt.show()
