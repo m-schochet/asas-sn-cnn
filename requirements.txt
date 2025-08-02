@@ -10,3 +10,7 @@ torch>=2.4.0
 tqdm>=4.66.5
 pip>=24.2
 requests>=2.32.4
+os
+sys
+copy
+warnings
