@@ -6,11 +6,17 @@ import numpy as np
 import pandas as pd
 
 
-def map_noise(noise_ids, N_sims=1000000, weights=[8, 1, 1]): 
+def map_noise(noise_ids:list, N_sims=1000000, weights=[8, 1, 1]): 
+    """ This function helps us map the one million "template" IDs to the simulations used in training the neural network
+
+    Args:
+        noise_ids (list): A list of template IDs for which to assign to sets
+        N_sims (int): (presrt to 1,000,000) the total number of simulations
+        weights (list): 3 term list to denote the split in size between training-testing-validation sets
+
+    Returns:
+        noise_match (pd.DataFrame): a compiled list of template IDs/sets/and simulation numbers with which to run injection codes
     """
-    This function helps us map the one million "template" IDs to the simulations used in training the neural network
-    """
-  
     weights = np.array(weights)/sum(weights) # normalize the weights array
 
     np.random.seed(88) # ensure the same seed is used each time this code is run
