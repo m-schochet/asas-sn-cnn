@@ -1,3 +1,9 @@
-asas-sn-cnn/.DS_Store
-asas-sn-cnn/plots/.DS_Store
-asas-sn-cnn/plots/files/.DS_Store
+.DS_Store
+plots/.DS_Store
+plots/files/.DS_Store
+plots/files/losses/.DS_Store
+plots/files/tesslcs/.DS_Store
+plots/files/testingcsvs_section5/.DS_Store
+plots/files/testingcsvs_section5/6_milliquas_yesr_norm_min_all/.DS_Store
+plots/files/testingcsvs_section5/6_milliquas_yesr_norm_nan_all/.DS_Store
+butterpy-simulations/.DS_Store
