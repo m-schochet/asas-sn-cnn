@@ -1,5 +1,8 @@
-# Code for "The ASAS-SN Rotation Period CNN (ARC) I: 200,000+ Deep Learning Inferred Periods of Stellar Variability from The All-Sky Automated Survey for Supernovae"
+# Code for "200,000+ Deep Learning Inferred Periods of Stellar Variability from The All-Sky Automated Survey for Supernovae"
 #### AKA: asas-sn-cnn
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15848602.svg)](https://doi.org/10.5281/10.5281/zenodo.15848602) - for datafiles
+
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/license/mit)
 
 ### Primary Author and contact for issues: [Meir Schochet](mailto:schoche4@msu.edu)
 This repository hosts all the code used in the development of the convolutional neural network from Schochet & Planet et al. (in prep) "The ASAS-SN Rotation Period CNN (ARC) I: 200,000+ Deep Learning Inferred Stellar Rotation Periods from The All-Sky Automated Survey for Supernovae"
