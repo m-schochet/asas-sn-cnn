@@ -36,12 +36,21 @@ def unscale_data(y):
     return y*pmax
 
 class WaveletDataset(Dataset):
-    """Face Landmarks dataset."""
+    """ Wavelet Dataset class which holds all our 2D wavelets for feeding into the CNN
+
+    Attributes:
+        data_path (str): Path on your machine where the all_wavelets.npy file from combine.py is stored
+        mode (string): either train, val, or test
+
+    """
 
     def __init__(self, data_path, mode):
-        """
+        """ __init__ method for the WaveletDataset class
+
         Args:
-            mode (string): either train, val, or test
+        data_path (str): Path on your machine where the all_wavelets.npy file from combine.py is stored
+        mode (string): either train, val, or test
+
         """
         data = np.load(
             os.path.join(data_path, f"all_wavelets.npy"),
@@ -76,9 +85,32 @@ class WaveletDataset(Dataset):
         return X, label
 
 def accuracy(frac_err, threshold=0.1):
+    """ Determines the portion of predictions that are accuracte to within a certain threshold
+
+    Args:
+        frac_err (np.array): Array of fractonal errors (|Pred-True|/True)
+        threshold (float): Fractional threshold of accuracy (currently preset to 0.1, or 10%)
+
+    Returns:
+        sum (float):  An value denoting the portion of predictions that were correct to within a frac_err of the threshold
+    """
+    
     return sum(frac_err <= threshold) / len(frac_err)
 
 def plot(output, target, epoch, model_name="cnn", mode="train"):
+    """ Plotter function for creating in-training plots
+
+    Args:
+        output (np.array): Array of predictions from the CNN after an epoch of training
+        target (np.array): Array of ground truths for the predictions (same size as output)
+        epoch (int): The current epoch 
+        model_name (str): Name of our model (preset to "cnn")
+        mode (str): What mode the CNN is currently in (preset to "train")
+
+    Returns:
+        None
+    """
+
     true_period = unscale_data(target)
     pred_period = unscale_data(output[:, 0])
     frac_err = abs(pred_period - true_period)/true_period
@@ -104,12 +136,24 @@ def plot(output, target, epoch, model_name="cnn", mode="train"):
     fig.savefig(f"{output_path}/plots/{model_name}_{mode}_{epoch:03d}.png")
     plt.close(fig)
 
-def train(model, device, train_loader, val_loader,
-          early_stopping_patience=early_stopping_patience, #edited so its the variable, not 10
-          model_name="cnn"):
-    '''Train the neural network for all desired epochs.
-    '''
-    optimizer = optim.Adam(model.parameters(), lr=1e-5) #maybe change by orders of 10, too big or too small can affect learning
+def train(model, device, train_loader, val_loader, early_stopping_patience=early_stopping_patience, model_name="cnn"):
+    """ Function to train our neural network
+
+    Args:
+        model (model.ConvNet): model.ConvNet object which is our instantiated CNN
+        device (torch.device): torch.device object that denotes whether the CNN is being run on CPUs ("cpu") or GPUs ("cuda")
+        train_loader (torch.utils.data.DataLoader): torch.utils.data.DataLoader object that holds the training set data
+        val_loader (torch.utils.data.DataLoader): torch.utils.data.DataLoader object that holds the validation set data
+        early_stopping_patience (int): integer that determines the number of epochs to stop training after (after a minimum value for validation loss is output with no further decrease in the validation loss)
+        model_name (str): Name of our model (preset to "cnn")
+
+    Returns:
+        best_weights (deepcopy of model.state_dict()): model.state_dict object that holds the model weights for our best network
+        train_p_loss (list): values of training loss over the entire course of training
+        val_p_loss (list): values of validation loss over the entire course of training
+    """
+
+    optimizer = optim.Adam(model.parameters(), lr=1e-5)
     
     # Set learning rate scheduler
     scheduler = ReduceLROnPlateau(optimizer, factor=0.7, patience=3)
@@ -150,10 +194,19 @@ def train(model, device, train_loader, val_loader,
     return best_weights, train_p_loss, val_p_loss
 
 def train_epoch(model, device, train_loader, optimizer, epoch):
-    '''
-    This is your training function. When you call this function, the model is
-    trained for 1 epoch.
-    '''
+    """ Functon to advance the network training forward an additional epoch
+
+    Args:
+        model (model.ConvNet): model.ConvNet object which is our instantiated CNN
+        device (torch.device): torch.device object that denotes whether the CNN is being run on CPUs ("cpu") or GPUs ("cuda")
+        train_loader (torch.utils.data.DataLoader): torch.utils.data.DataLoader object that holds the training set data
+        optimizer (torch.optim.Adam): torch.optim.Adam object that holds the preset parameters for our Adam optimizer
+        epoch (int): The current epoch 
+
+    Returns:
+        losses (int): the mean losses of our network in this epoch
+    """
+
     model.train() # Set the model to training mode
     period_losses = []
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -172,18 +225,34 @@ def train_epoch(model, device, train_loader, optimizer, epoch):
     return np.mean(period_losses)
 
 
-def test(model, device, test_loader, epoch=None, model_name=None, mode=None, make_plot=False, verbose=True):
+def test(model, device, data_loader, epoch=None, model_name=None, mode=None, make_plot=False, verbose=True):
+    """ Functon to test our network's recovery after a training epoch
+
+    Args:
+        model (model.ConvNet): model.ConvNet object which is our instantiated CNN
+        device (torch.device): torch.device object that denotes whether the CNN is being run on CPUs ("cpu") or GPUs ("cuda")
+        data_loader (torch.utils.data.DataLoader): torch.utils.data.DataLoader object that holds the set data
+        epoch (int, optional): The current epoch 
+        model_name (str, optional): Name of our model 
+        mode (str, optional): either train, val, or test
+        make_plot (boolean, optional): Whether or not a comparison plot of the predictions versus ground truths should be made 
+        verbose (boolean, optional): Whether the mean loss should be output or not
+
+    Returns:
+        p_loss (float): the loss of our network in this epoch
+    """
+        
     model.eval()    # Set the model to inference mode
-    test_p_loss = 0
+    p_loss = 0
     targets = []
     preds = []
     with torch.no_grad():   # For the inference step, gradient is not computed
-        for data, target in test_loader:
+        for data, target in data_loader:
             data, target = data.to(device, dtype=torch.float), target.to(device, dtype=torch.float)
             output = model(data)
             targets.extend(target.cpu().numpy())
             preds.extend(output.cpu().numpy())
-            test_p_loss += loss_function(output, target, reduction='sum').item()
+            p_loss += loss_function(output, target, reduction='sum').item()
     if make_plot:
         preds = np.squeeze(preds)
         targ = np.squeeze(targets)
@@ -200,13 +269,25 @@ def test(model, device, test_loader, epoch=None, model_name=None, mode=None, mak
  
         df = pd.DataFrame(results)
 
-    test_p_loss /= len(test_loader.dataset)
+    p_loss /= len(data_loader.dataset)
     
     if verbose:
-        print(f'Average test loss: {test_p_loss:.4f}')
-    return test_p_loss
+        print(f'Average test loss: {p_loss:.4f}')
+    return p_loss
 
 def predict(model, device, test_loader, verbose=True):
+    """ Functon to test our network's improvement on the test set
+
+    Args:
+        model (model.ConvNet): model.ConvNet object which is our instantiated CNN
+        device (torch.device): torch.device object that denotes whether the CNN is being run on CPUs ("cpu") or GPUs ("cuda")
+        test_loader (torch.utils.data.DataLoader): torch.utils.data.DataLoader object that holds the *test* set data
+        verbose (boolean, optional): Whether the mean test loss should be output or not
+
+    Returns:
+        preds (list): list of predicted output values
+        labels (list): list of identifiers for all objects with output predictions (same length as preds)
+    """
     model.eval()    # Set the model to inference mode
     preds = []
     labels = []

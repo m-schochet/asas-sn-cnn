@@ -1,17 +1,18 @@
+from astropy.timeseries import LombScargle
+import butterpy as bp
+from glob import glob
+import lightkurve as lk
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import polars as pl
+import pyasassn
+from pyasassn.lightcurve import LightCurve
+from scipy import interpolate
+import torch
 import sys
 import os
 import warnings
-from glob import glob
-import numpy as np
-import pandas as pd
-from astropy.timeseries import LombScargle
-import pyasassn
-from pyasassn.lightcurve import LightCurve
-import butterpy as bp
-import lightkurve as lk
-import torch
-import matplotlib.pyplot as plt
-from scipy import interpolate
 
 sim_dir = "(#insert your path for the simulated butterpy light curves here, which is the outpath variable from butterpy-simulations/run_sims.py#)"
 saved_wavelets = "(#insert your save path for the injected light curves here, which is from the create_folders.py job#)/training_wavelets"
@@ -27,24 +28,18 @@ tmax = 2460311
 
 #this function is essentially pulled from https://github.com/asas-sn/skypatrol/blob/master/pyasassn/wavelet.py
 def LS_wavelet(tt, ff, x, y, e_y, gam=2):
-    
-    """
-    Computes a wavelet power spectrum. This is a *SLOW* implementation,
-    hopefully to be replaced by something more efficient eventually.
-    
-    The units of tt and ff are assumed to be such that t * f is dimensionless.
-    tt and x are assumed to have the same units.
-    
-    :param tt: Array of times at which to evaluate wavelet PS
-    :param ff: Array of frequencies at which to evaluate wavelet PS
-    :param x: Time axis of input time series
-    :param y: Dynamical quantity (e.g. fluxes) of input time series
-    :param e_y: Measurement errors of input time series
-    :param Γ: tradeoff parameter between frequency and time resolution
-              (by Fourier uncertainty principle). Larger values give
-              better frequency resolution.
-    
-    :return: A numpy array containing the wavelet power spectrum.
+    """ Computes a wavelet power spectrum. This is a *SLOW* implementation, hopefully to be replaced by something more efficient eventually.
+
+    Args:
+        tt (np.array): Array of times at which to evaluate wavelet PS
+        ff (np.array): Array of frequencies at which to evaluate wavelet PS
+        x (np.array): Time axis of input time series
+        y (np.array): Dynamical quantity (e.g. fluxes) of input time series
+        e_y (np.array): Measurement errors of input time series
+        Γ (int): [preset to 2] tradeoff parameter between frequency and time resolution (by Fourier uncertainty principle). Larger values give better frequency resolution.
+
+    Returns:
+        acc (np.array):  A numpy array containing the 2D wavelet power spectrum.
     """
 
     acc = np.full((len(tt), len(ff)), np.nan)
@@ -64,24 +59,34 @@ def LS_wavelet(tt, ff, x, y, e_y, gam=2):
     return acc
 
 def read_sim(sim_id, reset_time=True):
+    """ Reads in a butterpy simulation 
+
+    Args:
+        sim_id (int): integer number of the butterpy simulation to load 
+        reset_time (boolean): determines whether the time series should be reset in time to begin at a preset minimum time (tmin). True means reset, False means not
+    
+    Returns:
+        lc (butterpy.LightCurve): A butterpy.LightCurve object (see https://github.com/zclaytor/butterpy/blob/main/butterpy/core.py)
     """
-    Load a full simulated butterpy light curve from a fits file and return time and flux.
-    """
+
     sim_path = os.path.join(sim_dir, f"{sim_id//1000:03.0f}", f"sim{sim_id:06d}.fits")
     lc = bp.read_fits(sim_path).lightcurve
     if reset_time:
         lc.time = lc.time - lc.time[0] + tmin
     return lc
 
-def single_wavelet(self, flux_list, tradeoff=2,):
+def single_wavelet(self, flux_list, tradeoff=2):
+    """ Constructs a 2D wavelet-transform and scales it appropriately for the uses in Schochet et al. 
+
+    Args:
+        self (pyasasssn.LightCurve): a LightCurve object with which to perform the transform on 
+        flux_list (list): either the self.flux list of flux values, or an injected flux list
+        tradeoff (int): the same parameter as Γ from LS_wavelet
+
+    Returns:
+        masked_wavelet (np.ndarray): A ndarray object that holds the transformed power spectrum
     """
-    Constructs a 2D wavelet-transform power spectrum of a single LightCurve Object.
-    
-    :param self: a LightCurve Object (re: https://github.com/asas-sn/skypatrol/blob/master/pyasassn/lightcurve.py / https://github.com/lightkurve/lightkurve/blob/main/src/lightkurve/lightcurve.py)
-    :param flux: Array of flux values for the passing of an injected flux array in making a 2D wavelet transform
-    
-    """
-    
+
     data = self.data
     x = data.jd
     y = flux_list
@@ -112,28 +117,30 @@ def single_wavelet(self, flux_list, tradeoff=2,):
 
 
 def pipeline(noise_ids, jobid):
-    """
-    Inject all simulated butterpy light curves into their associated clump/quiescent light curved
+    """Inject all simulated butterpy light curves into their associated clump/quiescent light curved
+    This function is written algorithmically. The steps of our pipeline are as follows:
+        1. read light curves
+            a. read noise light curve
+            b. read simulated light curve
+        2. inject_noise (flux from simulation gets 'injected' into the template 'quiescent' flux)
+        3. wavelet transform the combined injected flux list and the original noise light curve
+        4. bin the wavelet to the appropriate shape and format for the CNN (64x64)
+        5. take the final the binned wavelet as hlsp-like object
 
-    Steps:
-    1. read light curves
-       - read noise light curve
-       - read simulated light curve
-    2. inject_noise (flux from sim gets 'injected' into the template 'quiescent' flux)
-    3. wavelet transform the injected curve
-    4. bin the wavelet to an appropriate uniform size for the CNN (64x64), and save it
-    5. save the binned wavelet as hlsp-like object
+    
+    The for loop inside this pipeline is specific for *our* processing of ASAS-SN Light Curves. 
+    The entire ASAS-SN catalog was brought onto the University of Florida supercomputer (HiPetGator) 
+    in discretized file pairs of index-data files, containing the data on all observed ASAS-SN objects. 
+    To perform our injections of butterpy into the clump light curves, we developed this code to loop through
+    each of these file pairs and then manually check for the data on ASAS-SN stars that need to be injected with a specific simulation. 
+    Your milegae may vary when using this loop, and it may need to be redesigned for other data sets! We provide the loop anyways however, 
+    with the expectation that it should at least provide a starting idea of how one might inject these simulations into 'quiescent templates'.
+
     """
     total_injected = 0
     skipped_ids = []
     skipped_simulations = []
   
-
-    # The following loop is specific for our processing of ASAS-SN Light Curves. 
-    # The entire ASAS-SN catalog was brought onto the University of Florida supercomputer (HiPetGator) in discretized file pairs of index-data files. These files contained the data on all observed
-    # ASAS-SN objects. To perform our injections of butterpy into the clump light curves, we developed this code to loop through each of these file pairs and then manually check for the data 
-    # on ASAS-SN stars that need to be injected with a specific simulation. Your milegae may vary when using this loop, and it may need to be redesigned for other data sets! We provide the loop
-    # anyways however, with the expectation that it should at least provide a starting idea of how one might inject these simulations into 'quiescent templates'.
     index_base = '(#enter your path to the location of the saved index files#)'
 
     for filenum in range(0, 1091, 1):
