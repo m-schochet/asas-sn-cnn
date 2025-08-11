@@ -1,6 +1,4 @@
-import sys
 import os
-import warnings
 from glob import glob
 import numpy as np
 import pandas as pd

@@ -1,9 +1,6 @@
 import os
-import sys
 from glob import glob
-import numpy as np
 import polars as pl
-import pandas as pd
 from tqdm import tqdm
 
 os.chdir("(#insert path to index files#)")

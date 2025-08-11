@@ -1,8 +1,6 @@
 from astropy.timeseries import LombScargle
 import butterpy as bp
 from glob import glob
-import lightkurve as lk
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -12,7 +10,6 @@ from scipy import interpolate
 import torch
 import sys
 import os
-import warnings
 
 sim_dir = "(#insert your path for the simulated butterpy light curves here, which is the outpath variable from butterpy-simulations/run_sims.py#)"
 saved_wavelets = "(#insert your save path for the injected light curves here, which is from the create_folders.py job#)/training_wavelets"
