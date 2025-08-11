@@ -1,13 +1,11 @@
 import os
 import sys
-import warnings
 from glob import glob
 import numpy as np
 import polars as pl
 import pandas as pd
 from pyasassn.lightcurve import LightCurve
-import torch
-from plots/files/common_functions import LS_wavelet, single_wavelet
+from plots/common_functions import LS_wavelet, single_wavelet
 
 def run(jobid):
     jobid = int(jobid)

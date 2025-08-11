@@ -1,15 +1,14 @@
 from astropy.timeseries import LombScargle
 import butterpy as bp
-from glob import glob
 import numpy as np
 import pandas as pd
 import polars as pl
-import pyasassn
 from pyasassn.lightcurve import LightCurve
 from scipy import interpolate
 import torch
 import sys
 import os
+from plots/common_functions import LS_wavelet, read_sim, single_wavelet
 
 sim_dir = "(#insert your path for the simulated butterpy light curves here, which is the outpath variable from butterpy-simulations/run_sims.py#)"
 saved_wavelets = "(#insert your save path for the injected light curves here, which is from the create_folders.py job#)/training_wavelets"
@@ -22,95 +21,6 @@ clump_ids = pd.Series(id_list)
 #tmin/tmax values, these one correspond to ~1/1/2019 - ~1/1/2024
 tmin = 2458485
 tmax = 2460311
-
-#this function is essentially pulled from https://github.com/asas-sn/skypatrol/blob/master/pyasassn/wavelet.py
-def LS_wavelet(tt, ff, x, y, e_y, gam=2):
-    """ Computes a wavelet power spectrum. This is a *SLOW* implementation, hopefully to be replaced by something more efficient eventually.
-
-    Args:
-        tt (np.array): Array of times at which to evaluate wavelet PS
-        ff (np.array): Array of frequencies at which to evaluate wavelet PS
-        x (np.array): Time axis of input time series
-        y (np.array): Dynamical quantity (e.g. fluxes) of input time series
-        e_y (np.array): Measurement errors of input time series
-        Γ (int): [preset to 2] tradeoff parameter between frequency and time resolution (by Fourier uncertainty principle). Larger values give better frequency resolution.
-
-    Returns:
-        acc (np.array):  A numpy array containing the 2D wavelet power spectrum.
-    """
-
-    acc = np.full((len(tt), len(ff)), np.nan)
-  
-    def window(x):
-        return np.exp(-x**2/2)
-
-    for j, nu in enumerate(ff):
-        dt = gam * (1/nu)
-        for i, t in enumerate(tt):
-            w = window((x-t)/dt)
-            m = np.isfinite(np.nan_to_num(e_y/w, nan=np.inf))
-            ls = LombScargle(x[m], y[m], dy=(e_y/w)[m])
-            p = float(ls.power(nu, normalization='psd'))
-            p /= (np.sqrt(2 * np.pi) * dt)
-            acc[i, j] = p
-    return acc
-
-def read_sim(sim_id, reset_time=True):
-    """ Reads in a butterpy simulation 
-
-    Args:
-        sim_id (int): integer number of the butterpy simulation to load 
-        reset_time (boolean): determines whether the time series should be reset in time to begin at a preset minimum time (tmin). True means reset, False means not
-    
-    Returns:
-        lc (butterpy.LightCurve): A butterpy.LightCurve object (see https://github.com/zclaytor/butterpy/blob/main/butterpy/core.py)
-    """
-
-    sim_path = os.path.join(sim_dir, f"{sim_id//1000:03.0f}", f"sim{sim_id:06d}.fits")
-    lc = bp.read_fits(sim_path).lightcurve
-    if reset_time:
-        lc.time = lc.time - lc.time[0] + tmin
-    return lc
-
-def single_wavelet(self, flux_list, tradeoff=2):
-    """ Constructs a 2D wavelet-transform and scales it appropriately for the uses in Schochet et al. 
-
-    Args:
-        self (pyasasssn.LightCurve): a LightCurve object with which to perform the transform on 
-        flux_list (list): either the self.flux list of flux values, or an injected flux list
-        tradeoff (int): the same parameter as Γ from LS_wavelet
-
-    Returns:
-        masked_wavelet (np.ndarray): A ndarray object that holds the transformed power spectrum
-    """
-
-    data = self.data
-    x = data.jd
-    y = flux_list
-    e_y = data.flux_err
-    
-    # generate the time array of evaluation
-    tt = np.linspace(np.min(x), np.max(x), 128)
-    
-    # the ff array we feed into the LS_wavelet function starts from freq = 1 (one rotation per day) to freq = 1/30 (one rotation every 30 days)
-    periods = np.arange(1, 30, 0.2275)
-    ff = 1/periods
-    
-    # generate the wavelet transform    
-    wavelet = LS_wavelet(tt, ff, x, y, e_y, gam=tradeoff)
-    
-    # do 2D interpolative masking to cover with a mask at NaN/-inf/+inf values
-    wave = wavelet.T
-    x_list = np.arange(0, wave.shape[1])
-    y_list = np.arange(0, wave.shape[0])
-    wavelet2 = np.ma.masked_invalid(wave)
-    xx, yy = np.meshgrid(x_list, y_list)
-    no_mask_x = xx[~wavelet2.mask]
-    no_mask_y = yy[~wavelet2.mask]
-    newarr = wavelet2[~wavelet2.mask]
-    masked_wavelet = interpolate.griddata((no_mask_x, no_mask_y), newarr.ravel(), (xx, yy), method='cubic')
-    
-    return masked_wavelet
 
 
 def pipeline(noise_ids, jobid):
