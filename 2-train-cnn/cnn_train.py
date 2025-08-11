@@ -36,7 +36,7 @@ def unscale_data(y):
     return y*pmax
 
 class WaveletDataset(Dataset):
-    """ Wavelet Dataset class which holds all our 2D wavelets for feeding into the CNN
+    """ WaveletDataset class which holds all our 2D wavelets for feeding into the CNN
 
     Attributes:
         data_path (str): Path on your machine where the all_wavelets.npy file from combine.py is stored

@@ -19,15 +19,29 @@ outpath = "(#input path to save evaluation output csvs#)"
 pmax = int(30)
 
 class WaveletDataset(Dataset):
-    """Face Landmarks dataset."""
+    """ WaveletDataset class which holds all our 2D wavelets for feeding into the CNN
+
+    Attributes:
+        data_path (str): Path on your machine where the all_wavelets.npy file from combine.py is stored
+        mode (string): either train, val, or test
+
+    """
 
     def __init__(self, data_path):
+        """ __init__ method for the WaveletDataset class
+
+        Args:
+        data_path (str): Path on your machine where the all_wavelets.npy file from combine.py is stored
+
+        """
         self.data_frame = np.load(data_path, mmap_mode='r')
 
     def __len__(self):
+        """ __len__ method for the WaveletDataset class, returns the length of the WaveletDataset object """
         return len(self.data_frame)
 
     def __getitem__(self, idx):
+        """ __getitem__ method for the WaveletDataset class, which returns a specific item in the WaveletDataset object """
         if torch.is_tensor(idx):
             idx = idx.tolist()
         X = self.data_frame[idx].astype('float32') 
