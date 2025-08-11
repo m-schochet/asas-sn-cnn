@@ -10,42 +10,24 @@ from pyasassn.lightcurve import LightCurve
 from scipy import interpolate
 import torch
 
-def read_sim(simfile, reset_time=True):
-    """
-    Load full light curve from fits file and return time and flux.
-    """
-    
-    sim_path = simfile
-    lc = bp.read_fits(sim_path).lightcurve
-    if reset_time:
-        lc.time = lc.time - lc.time[0] + 2458484.5
-    return lc
 
 
 #this function is essentially pulled from https://github.com/asas-sn/skypatrol/blob/master/pyasassn/wavelet.py
 def LS_wavelet(tt, ff, x, y, e_y, gam=2):
-    
+    """ Computes a wavelet power spectrum. This is a *SLOW* implementation, hopefully to be replaced by something more efficient eventually.
+
+    Args:
+        tt (np.array): Array of times at which to evaluate wavelet PS
+        ff (np.array): Array of frequencies at which to evaluate wavelet PS
+        x (np.array): Time axis of input time series
+        y (np.array): Dynamical quantity (e.g. fluxes) of input time series
+        e_y (np.array): Measurement errors of input time series
+        Γ (int): [preset to 2] tradeoff parameter between frequency and time resolution (by Fourier uncertainty principle). Larger values give better frequency resolution.
+
+    Returns:
+        acc (np.array):  A numpy array containing the 2D wavelet power spectrum.
     """
-    Computes a wavelet power spectrum. This is a *SLOW* implementation,
-    hopefully to be replaced by something more efficient eventually.
-    
-    The units of tt and ff are assumed to be such that t * f is dimensionless.
-    tt and x are assumed to have the same units.
-    
-    :param tt: Array of times at which to evaluate wavelet PS
-    :param ff: Array of frequencies at which to evaluate wavelet PS
-    :param x: Time axis of input time series
-    :param y: Dynamical quantity (e.g. fluxes) of input time series
-    :param e_y: Measurement errors of input time series
-    :param gam: tradeoff parameter between frequency and time resolution
-              (by Fourier uncertainty principle). Larger values give
-              better frequency resolution.
-    
-    :return: A numpy array containing the wavelet power spectrum.
-    """
-    
-    tmin = 2458485
-    tmax = 2460311
+
     acc = np.full((len(tt), len(ff)), np.nan)
   
     def window(x):
@@ -62,24 +44,99 @@ def LS_wavelet(tt, ff, x, y, e_y, gam=2):
             acc[i, j] = p
     return acc
 
+def read_sim(sim_id, reset_time=True):
+    """ Reads in a butterpy simulation 
 
-def single_wavelet(self, flux_list, min=False, scaled=False, tradeoff=2):
-    """
-    Constructs a 2D wavelet-transform power spectrum of a single LightCurve Object.
+    Args:
+        sim_id (int): integer number of the butterpy simulation to load 
+        reset_time (boolean): determines whether the time series should be reset in time to begin at a preset minimum time (tmin). True means reset, False means not
     
-    :param self: a LightCurve Object (re: https://github.com/asas-sn/skypatrol/blob/master/pyasassn/lightcurve.py / https://github.com/lightkurve/lightkurve/blob/main/src/lightkurve/lightcurve.py).
-    :param flux: Array of flux values for the passing of an injected flux array in making a 2D wavelet transform.
-    :param min: (Default: False) boolean, whether the transform should be min-masked (non-used method).
-    :param scaled: (Default: False) boolean, whether the transform should be scaled 10x average power and capped at [0, 255] (non-used method). 
-    :param tradeoff: int value to represent tradeoff between frequency/time resolution in the transformation (preset to 2 in Schochet et al.).
-
-
-    :return: power_int, a 64x64 2D torch.Tensor object which holds the reshaped wavelet transform image, normed to values of [0, 255]    .
+    Returns:
+        lc (butterpy.LightCurve): A butterpy.LightCurve object (see https://github.com/zclaytor/butterpy/blob/main/butterpy/core.py)
     """
-    
+
+    sim_path = os.path.join(sim_dir, f"{sim_id//1000:03.0f}", f"sim{sim_id:06d}.fits")
+    lc = bp.read_fits(sim_path).lightcurve
+    if reset_time:
+        lc.time = lc.time - lc.time[0] + tmin
+    return lc
+
+def single_wavelet(self, flux_list=None, tradeoff=2):
+    """ Constructs a 2D wavelet-transform
+
+    Args:
+        self (pyasasssn.LightCurve): a LightCurve object with which to perform the transform on 
+        flux_list (list): either the self.flux list of flux values, or an injected flux list
+        tradeoff (int): the same parameter as Γ from LS_wavelet
+
+    Returns:
+        masked_wavelet (np.ndarray): A ndarray object that holds the transformed power spectrum
+    """
+
     data = self.data
     x = data.jd
     y = flux_list
+    e_y = data.flux_err
+    
+    # generate the time array of evaluation
+    tt = np.linspace(np.min(x), np.max(x), 128)
+    
+    # the ff array we feed into the LS_wavelet function starts from freq = 1 (one rotation per day) to freq = 1/30 (one rotation every 30 days)
+    periods = np.arange(1, 30, 0.2275)
+    ff = 1/periods
+    
+    # generate the wavelet transform    
+    wavelet = LS_wavelet(tt, ff, x, y, e_y, gam=tradeoff)
+    
+    # do 2D interpolative masking to cover with a mask at NaN/-inf/+inf values
+    wave = wavelet.T
+    
+    x_list = np.arange(0, wave.shape[1])
+    y_list = np.arange(0, wave.shape[0])
+    wavelet2 = np.ma.masked_invalid(wave)
+    xx, yy = np.meshgrid(x_list, y_list)
+    no_mask_x = xx[~wavelet2.mask]
+    no_mask_y = yy[~wavelet2.mask]
+    newarr = wavelet2[~wavelet2.mask]
+    masked_wavelet = interpolate.griddata((no_mask_x, no_mask_y), newarr.ravel(), (xx, yy), method='cubic')
+    
+    return masked_wavelet
+
+def wavelet_rebased(self, flux_list=None, min=False, scaled=False, tradeoff=2):
+    """ Constructs a 2D wavelet-transform and then scales it appropriately for the uses in Schochet et al. 
+
+    Args:
+        self (pyasasssn.LightCurve): a LightCurve object with which to perform the transform on 
+        flux_list (list): either the self.flux list of flux values, or an injected flux list
+        min (boolean): whether the transform should be min-masked (non-used method).
+        flux_list (boolean): whether the transform should be scaled 10x average power and capped at [0, 255] (non-used method). 
+        tradeoff (int): the same parameter as Γ from LS_wavelet
+
+    Returns:
+        masked_wavelet (np.ndarray): A ndarray object that holds the transformed power spectrum
+    """
+
+    data = self.data
+    x = data.jd
+    y = flux_list
+    e_y = data.flux_err
+    
+    # generate the time array of evaluation
+    tt = np.linspace(np.min(x), np.max(x), 128)
+    
+    # the ff array we feed into the LS_wavelet function starts from freq = 1 (one rotation per day) to freq = 1/30 (one rotation every 30 days)
+    periods = np.arange(1, 30, 0.2275)
+    ff = 1/periods
+    
+    # generate the wavelet transform    
+    wavelet = LS_wavelet(tt, ff, x, y, e_y, gam=tradeoff)
+        
+    data = self.data
+    x = data.jd
+    if flux_list:
+        y = flux_list
+    else:
+        y=data.flux
     e_y = data.flux_err
     
     # generate the time array of evaluation
