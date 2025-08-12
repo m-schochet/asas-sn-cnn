@@ -52,7 +52,7 @@ class WaveletDataset(Dataset):
 
 if __name__ == "__main__":
     data = WaveletDataset(data_path=datapath)
-    loader = torch.utils.data.DataLoader(data, batch_size=22)
+    loader = DataLoader(data, batch_size=22)
     ids = np.loadtxt(os.path.join(('#insert save path for this file#'), "0-get-quiescent-bkg/asas-sn_training_stars.txt"), dtype=str)
 
     if run_number == 0:

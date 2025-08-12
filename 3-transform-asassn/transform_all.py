@@ -1,11 +1,11 @@
 import os
 import sys
-from glob import glob
 import numpy as np
+import torch
 import polars as pl
 import pandas as pd
 from pyasassn.lightcurve import LightCurve
-from plots/common_functions import LS_wavelet, single_wavelet
+from common_functions import single_wavelet
 
 def run(jobid):
     jobid = int(jobid)
@@ -74,7 +74,15 @@ def run(jobid):
                         index = index.with_columns(pl.when(pl.col("__index_level_0__")==(level)).then(False).otherwise(pl.col('keeper')).alias('keeper'))
                         index.write_parquet(index_files)
                         continue
-                    np.save(save_array, power_int)
+                    printer = wavelet[np.newaxis, :]
+                    power_tensor = torch.tensor(printer)
+                    pooled = torch.nn.functional.adaptive_avg_pool2d(power_tensor, output_size=(64, 64))
+                    repooled = torch.squeeze(pooled)
+                    no_nans = torch.nan_to_num(repooled, posinf=0, neginf=0)
+                    scaled_power = no_nans - no_nans.min()
+                    scaled_power2 = scaled_power * (255/scaled_power.max())
+                    final_wavelet = scaled_power2.numpy().astype("uint8")
+                    np.save(save_array, final_wavelet)
                     print(f"ASAS-SN ID: {strid} was successfully transformed.", file=sys.stdout)
                 else:
                     print(f"ASAS-SN ID: {strid} is NOT A STAR, noted in index", file=sys.stdout)

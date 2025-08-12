@@ -1,14 +1,11 @@
-from astropy.timeseries import LombScargle
-import butterpy as bp
 import numpy as np
 import pandas as pd
 import polars as pl
 from pyasassn.lightcurve import LightCurve
-from scipy import interpolate
 import torch
 import sys
 import os
-from plots/common_functions import LS_wavelet, read_sim, single_wavelet
+from common_functions import read_sim, single_wavelet
 
 sim_dir = "(#insert your path for the simulated butterpy light curves here, which is the outpath variable from butterpy-simulations/run_sims.py#)"
 saved_wavelets = "(#insert your save path for the injected light curves here, which is from the create_folders.py job#)/training_wavelets"
@@ -105,7 +102,7 @@ def pipeline(noise_ids, jobid):
                     
                     # create wavelet transform
                     try:     
-                        wavelet = single_wavelet(noise_lc, new_flux)
+                        wavelet = single_wavelet(noise_lc, flux_list=new_flux)
                     except ValueError: # in the event the transform experiences a SciPy Value Error, skip the object and note that it'll need to be replaced later
                         print(f"Scipy value error on transform for clump star {element} and simulation {simnum}. Have recorded and skipping this object (MUST FIX LATER)", file=sys.stdout)
                         skipped_ids.append(element)
