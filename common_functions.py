@@ -1,15 +1,11 @@
 from astropy.timeseries import LombScargle
 import butterpy as bp
-import lightkurve as lk
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import pandas as pd
-import pyasassn
 from pyasassn.lightcurve import LightCurve
 from scipy import interpolate
 import torch
-
 
 
 #this function is essentially pulled from https://github.com/asas-sn/skypatrol/blob/master/pyasassn/wavelet.py
@@ -102,7 +98,7 @@ def single_wavelet(self, flux_list=None, tradeoff=2):
     
     return masked_wavelet
 
-def wavelet_rebased(self, flux_list=None, min=False, scaled=False, tradeoff=2):
+def wavelet_rebased(self, flux_list=0, min=False, scaled=False, tradeoff=2):
     """ Constructs a 2D wavelet-transform and then scales it appropriately for the uses in Schochet et al. 
 
     Args:
@@ -118,7 +114,10 @@ def wavelet_rebased(self, flux_list=None, min=False, scaled=False, tradeoff=2):
 
     data = self.data
     x = data.jd
-    y = flux_list
+    if flux_list==0:
+        y = data.flux
+    else:
+        y = flux_list
     e_y = data.flux_err
     
     # generate the time array of evaluation
@@ -131,24 +130,6 @@ def wavelet_rebased(self, flux_list=None, min=False, scaled=False, tradeoff=2):
     # generate the wavelet transform    
     wavelet = LS_wavelet(tt, ff, x, y, e_y, gam=tradeoff)
         
-    data = self.data
-    x = data.jd
-    if flux_list:
-        y = flux_list
-    else:
-        y=data.flux
-    e_y = data.flux_err
-    
-    # generate the time array of evaluation
-    tt = np.linspace(np.min(x), np.max(x), 128)
-    
-    # the ff array we feed into the LS_wavelet function starts from freq = 1 (one rotation per day) to freq = 1/30 (one rotation every 30 days)
-    periods = np.arange(1, 30, 0.2275)
-    ff = 1/periods
-    
-    # generate the wavelet transform    
-    wavelet = LS_wavelet(tt, ff, x, y, e_y, gam=tradeoff)
-    
     # do 2D interpolative masking to cover with a mask at NaN/-inf/+inf values
     wave = wavelet.T
 
@@ -181,9 +162,16 @@ def wavelet_rebased(self, flux_list=None, min=False, scaled=False, tradeoff=2):
     return final_wavelet
 
 def reduce(noisy_lc):
+    """ Apply the data cleaning reductions from Section 2 of Schochet et al. to a light curve
+
+    Args:
+        noisy_lc (pyasasssn.LightCurve): a LightCurve object with which to reduce the data
+
+    Returns:
+        noisy_lc (pyasasssn.LightCurve): the reduced LightCurve object
+
     """
-    Do baseline data reductions by removing data points in the wrong filter/determined to be poor observations/before or after the times of analysis
-    """
+
     tmin = 2458485
     tmax = 2460311
     
@@ -196,8 +184,15 @@ def reduce(noisy_lc):
     return noisy_lc
 
 def inject_flux(sim, lightcurve):
-    """
-    Inject a simulation into a template light curve given the simulation and lightkurve objects
+    """ Inject a simulation into a template light curve given the simulation and lightkurve objects
+
+    Args:
+        sim (butterpy.LightCurve): a butterpy.LightCurve object that holds the simulated light curve 
+        lightcurve (pyasassn.LightCurve): a noise template.LightCurve object to inject simulation flux into
+
+    Returns:
+        new_flux (list): injected flux values, of the same length as lightcurve
+        
     """
     tmin = 2458485
     tmax = 2460311
@@ -209,6 +204,18 @@ def inject_flux(sim, lightcurve):
     return new_flux
 
 def plotter(wavelet, save=False, minimum = "not", scaled = "not"):
+    """ Plotting function for displaying the 2D transformations
+    
+    Args:
+        wavelet (np.ndarray): output 2D transform from single_wavelet, or wavelet_rebased
+        save (boolean, Optional): whether or not the plotted figure should be saved
+        minimum (str, "not" or "yes"): whether the plotted transform is min-masked
+        scaled (str, "not" or "yes"): whether the plotted transform is 10x scaled
+
+    Returns:
+        None
+        
+    """
     fig, ax = plt.subplots(figsize=(10,6), layout='constrained')
     
     tmin = 2458485
