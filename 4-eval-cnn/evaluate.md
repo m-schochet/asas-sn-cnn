@@ -1,1 +1,0 @@
-## The file in this folder is structured similarly to the 3-transform-asassn jobs such that they are structured as a single running job. The evaluate_cnn.py script is run in one go rather than making references to earlier defined functions in the file and iterating through the steps. If confused, please contact the authors
