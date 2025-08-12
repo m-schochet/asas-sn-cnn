@@ -1,11 +1,9 @@
 import os
 import sys
-
 import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import Dataset, DataLoader
-
 from glob import glob
 from model import ConvNet
 
@@ -13,24 +11,37 @@ run_name = "asassn"
 run_number = int(sys.argv[1])
 run_saver = f"{run_name}_{run_number}"
 
-run_path = "(#output_path variable from 2-train-cnn/cnn_train)"
+run_path = "(#output_path variable from 2-train-cnn/cnn_train#)"
 pmax = int(30)
 
 class WaveletDataset(Dataset):
-    """
-    Wavelet transform dataset <'class'>
+    """ WaveletDataset class which holds all our 2D wavelets for feeding into the CNN
 
-    used to compile our transforms and load them into the CNN for evaluation
-    
+    Attributes:
+        data_path (str): Path on your machine where the all_wavelets.npy file from combine.py is stored
+
     """
 
     def __init__(self, data_path):
+        """ __init__ method for the WaveletDataset class
+
+        Args:
+        data_path (str): Path on your machine where the all_wavelets.npy file from combine.py is stored
+
+        """
         self.data_frame = np.sort(np.load(data_path, mmap_mode='r'))
 
     def __len__(self):
         return len(self.data_frame)
 
     def __getitem__(self, idx):
+        """ __getitem__ method for the WaveletDataset class
+
+        Args:
+        idx (str): location of object to return from WaveletDataset
+
+        """
+        
         if torch.is_tensor(idx):
             idx = idx.tolist()
         X = self.data_frame[idx].astype('float32') 
@@ -64,7 +75,7 @@ if __name__ == "__main__":
         list_of_files = sorted(glob(os.path.join(dataroot, "*.npy")))
         list_of_filenames = [file for file in list_of_files if 'all_wavelets' not in file]
         ids = []
-        for obj in lister:
+        for obj in list_of_filenames:
             #NOTE: This is a janky loop meant to collect the ID for each object in the all_wavelets file, 
             #      by scraping them from the file names themselves (poor programming in retrospect)
             #      as a result, these lines NEED to be adjusted depending on your save paths and the 
@@ -76,10 +87,9 @@ if __name__ == "__main__":
             
             string_id = str(obj[index+('{#number of characters in intA #})' + 5):index2])
             # the +5 here accounts for the added 4 digits of the datapath from the str(i).zfill(4) call and another forward slash to the final folder
-            
             ids.append(string_id)
-    
-    	if run_number == 0:
+
+        if run_number == 0:
             c = [8, 16, 32]
         elif run_number == 1:
             c = [16, 32, 64]
@@ -89,9 +99,9 @@ if __name__ == "__main__":
             c = [64, 128, 256]
     
         modelpath = os.path.join(run_path, "models", run_name+".pt")
-    	model = ConvNet(c=c)
+        model = ConvNet(c=c)
     
-    	cuda = torch.cuda.is_available()
+        cuda = torch.cuda.is_available()
         if cuda:
             device = torch.device("cuda")
         else:
@@ -101,7 +111,7 @@ if __name__ == "__main__":
         model.to(device)
         model.eval()
     
-    	preds = []
+        preds = []
         with torch.no_grad():
             for d in loader:
                 d = d.to(device, dtype=torch.float)
@@ -112,8 +122,8 @@ if __name__ == "__main__":
                     output = output.numpy()
                 preds.extend(output)
     
-    	preds = pmax * np.squeeze(preds)
-        output = pd.DataFrame(preds, columns=["period", "sigma"])
+        preds_fin = pmax * np.squeeze(preds)
+        output = pd.DataFrame(preds_fin, columns=["period", "sigma"])
         output.index = ids
         output.index.name = "target_id"
         output.to_csv(os.path.join(outpath, f"{run_saver}_{i}_predictions.csv"))

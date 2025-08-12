@@ -76,6 +76,13 @@ class WaveletDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
+        """ __getitem__ method for the WaveletDataset class
+
+        Args:
+        idx (str): location of object to return from WaveletDataset
+
+        """
+        
         if torch.is_tensor(idx):
             idx = idx.tolist()
         X = self.data_frame[idx].astype('float32') 
