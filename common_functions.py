@@ -50,19 +50,36 @@ def read_sim(sim_id, reset_time=True):
     Returns:
         lc (butterpy.LightCurve): A butterpy.LightCurve object (see https://github.com/zclaytor/butterpy/blob/main/butterpy/core.py)
     """
-
+    tmin = 2458485
+    sim_dir = '(#insert directory for simulations here#)'
     sim_path = os.path.join(sim_dir, f"{sim_id//1000:03.0f}", f"sim{sim_id:06d}.fits")
     lc = bp.read_fits(sim_path).lightcurve
     if reset_time:
         lc.time = lc.time - lc.time[0] + tmin
     return lc
 
-def single_wavelet(self, flux_list=None, tradeoff=2):
+def read_sim_path(sim_path, reset_time=True):
+    """ Reads in a butterpy simulation from a specific path (used in Jupyter notebooks)
+
+    Args:
+        sim_id (str): path for simulation to load
+        reset_time (boolean): determines whether the time series should be reset in time to begin at a preset minimum time (tmin). True means reset, False means not
+    
+    Returns:
+        lc (butterpy.LightCurve): A butterpy.LightCurve object (see https://github.com/zclaytor/butterpy/blob/main/butterpy/core.py)
+    """
+    tmin = 2458485
+    lc = bp.read_fits(sim_path).lightcurve
+    if reset_time:
+        lc.time = lc.time - lc.time[0] + tmin
+    return lc
+
+def single_wavelet(self, flux_list=0, tradeoff=2):
     """ Constructs a 2D wavelet-transform
 
     Args:
         self (pyasasssn.LightCurve): a LightCurve object with which to perform the transform on 
-        flux_list (list): either the self.flux list of flux values, or an injected flux list
+        flux_list (list: optional): either the self.flux list of flux values, or an injected flux list
         tradeoff (int): the same parameter as Γ from LS_wavelet
 
     Returns:
@@ -71,7 +88,10 @@ def single_wavelet(self, flux_list=None, tradeoff=2):
 
     data = self.data
     x = data.jd
-    y = flux_list
+    if flux_list==0:
+        y = data.flux
+    else:
+        y = flux_list
     e_y = data.flux_err
     
     # generate the time array of evaluation
