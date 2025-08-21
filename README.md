@@ -1,6 +1,6 @@
 # Code for "200,000+ Deep Learning Inferred Periods of Stellar Variability from The All-Sky Automated Survey for Supernovae"
 #### AKA: asas-sn-cnn
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15848602.svg)](https://doi.org/10.5281/zenodo.15848602) - for datafiles
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16882028.svg)](https://doi.org/10.5281/zenodo.16882028) - for datafiles
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
