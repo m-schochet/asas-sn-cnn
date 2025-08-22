@@ -17,6 +17,6 @@ data.write('(#save location of the MRT as a.csv#)', format='ascii.csv', overwrit
 ```
 
 ## Sources of Extra Data
-### Gaia DR3
+### Gaia DR2/eDR3/DR3
 ### Kepler and TIC IDs have been collated with https://mastweb.stsci.edu/mcasjobs/
 ### XG Boost information was gathered from https://zenodo.org/records/7599789
