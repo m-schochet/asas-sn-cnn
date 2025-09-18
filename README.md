@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ### Primary Author and contact for issues: [Meir Schochet](mailto:schoche4@msu.edu)
-This repository hosts all the code used in the development of the convolutional neural network from Schochet & Planet et al. (in prep)  "200,000+ Deep Learning Inferred Periods of Stellar Variability from The All-Sky Automated Survey for Supernovae"
+This repository hosts all the code used in the development of the convolutional neural network from Schochet & Planet et al. (submitted)  "200,000+ Deep Learning Inferred Periods of Stellar Variability from The All-Sky Automated Survey for Supernovae"
 
 
 ## Repository Guide
