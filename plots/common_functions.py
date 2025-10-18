@@ -78,7 +78,7 @@ def single_wavelet(self, flux_list=0, tradeoff=2):
     """ Constructs a 2D wavelet-transform
 
     Args:
-        self (pyasasssn.LightCurve): a LightCurve object with which to perform the transform on 
+        self (pyasassn.LightCurve): a LightCurve object with which to perform the transform on 
         flux_list (list: optional): either the self.flux list of flux values, or an injected flux list
         tradeoff (int): the same parameter as Γ from LS_wavelet
 
@@ -122,7 +122,7 @@ def wavelet_rebased(self, flux_list=0, min=False, scaled=False, tradeoff=2):
     """ Constructs a 2D wavelet-transform and then scales it appropriately for the uses in Schochet et al. 
 
     Args:
-        self (pyasasssn.LightCurve): a LightCurve object with which to perform the transform on 
+        self (pyasassn.LightCurve): a LightCurve object with which to perform the transform on 
         flux_list (list): either the self.flux list of flux values, or an injected flux list
         min (boolean): whether the transform should be min-masked (non-used method).
         flux_list (boolean): whether the transform should be scaled 10x average power and capped at [0, 255] (non-used method). 
@@ -185,10 +185,10 @@ def reduce(noisy_lc):
     """ Apply the data cleaning reductions from Section 2 of Schochet et al. to a light curve
 
     Args:
-        noisy_lc (pyasasssn.LightCurve): a LightCurve object with which to reduce the data
+        noisy_lc (pyasassn.LightCurve): a LightCurve object with which to reduce the data
 
     Returns:
-        noisy_lc (pyasasssn.LightCurve): the reduced LightCurve object
+        noisy_lc (pyasassn.LightCurve): the reduced LightCurve object
 
     """
 

@@ -11,3 +11,4 @@ requests>=2.32.4
 skypatrol>=0.6.16
 torch>=2.4.0
 tqdm>=4.66.5
+ipywidgets>=8.1.7
