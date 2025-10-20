@@ -40,92 +40,32 @@ def LS_wavelet(tt, ff, x, y, e_y, gam=2):
             acc[i, j] = p
     return acc
 
-def read_sim(sim_id, reset_time=True):
+def read_sim(sim_id, sim_dir='files', reset_time=True):
     """ Reads in a butterpy simulation 
 
     Args:
         sim_id (int): integer number of the butterpy simulation to load 
+        sim_dir (str): location of sim files on your machine, preset to files which holds sim 900184 from Schochet & Planet et al. (2025)
         reset_time (boolean): determines whether the time series should be reset in time to begin at a preset minimum time (tmin). True means reset, False means not
     
     Returns:
         lc (butterpy.LightCurve): A butterpy.LightCurve object (see https://github.com/zclaytor/butterpy/blob/main/butterpy/core.py)
     """
     tmin = 2458485
-    sim_dir = '(#insert directory for simulations here#)'
     sim_path = os.path.join(sim_dir, f"{sim_id//1000:03.0f}", f"sim{sim_id:06d}.fits")
     lc = bp.read_fits(sim_path).lightcurve
     if reset_time:
         lc.time = lc.time - lc.time[0] + tmin
     return lc
 
-def read_sim_path(sim_path, reset_time=True):
-    """ Reads in a butterpy simulation from a specific path (used in Jupyter notebooks)
-
-    Args:
-        sim_id (str): path for simulation to load
-        reset_time (boolean): determines whether the time series should be reset in time to begin at a preset minimum time (tmin). True means reset, False means not
-    
-    Returns:
-        lc (butterpy.LightCurve): A butterpy.LightCurve object (see https://github.com/zclaytor/butterpy/blob/main/butterpy/core.py)
-    """
-    tmin = 2458485
-    lc = bp.read_fits(sim_path).lightcurve
-    if reset_time:
-        lc.time = lc.time - lc.time[0] + tmin
-    return lc
-
-def single_wavelet(self, flux_list=0, tradeoff=2):
-    """ Constructs a 2D wavelet-transform
-
-    Args:
-        self (pyasassn.LightCurve): a LightCurve object with which to perform the transform on 
-        flux_list (list: optional): either the self.flux list of flux values, or an injected flux list
-        tradeoff (int): the same parameter as Γ from LS_wavelet
-
-    Returns:
-        masked_wavelet (np.ndarray): A ndarray object that holds the transformed power spectrum
-    """
-
-    data = self.data
-    x = data.jd
-    if flux_list==0:
-        y = data.flux
-    else:
-        y = flux_list
-    e_y = data.flux_err
-    
-    # generate the time array of evaluation
-    tt = np.linspace(np.min(x), np.max(x), 128)
-    
-    # the ff array we feed into the LS_wavelet function starts from freq = 1 (one rotation per day) to freq = 1/30 (one rotation every 30 days)
-    periods = np.arange(1, 30, 0.2275)
-    ff = 1/periods
-    
-    # generate the wavelet transform    
-    wavelet = LS_wavelet(tt, ff, x, y, e_y, gam=tradeoff)
-    
-    # do 2D interpolative masking to cover with a mask at NaN/-inf/+inf values
-    wave = wavelet.T
-    
-    x_list = np.arange(0, wave.shape[1])
-    y_list = np.arange(0, wave.shape[0])
-    wavelet2 = np.ma.masked_invalid(wave)
-    xx, yy = np.meshgrid(x_list, y_list)
-    no_mask_x = xx[~wavelet2.mask]
-    no_mask_y = yy[~wavelet2.mask]
-    newarr = wavelet2[~wavelet2.mask]
-    masked_wavelet = interpolate.griddata((no_mask_x, no_mask_y), newarr.ravel(), (xx, yy), method='cubic')
-    
-    return masked_wavelet
-
-def wavelet_rebased(self, flux_list=0, min=False, scaled=False, tradeoff=2):
+def wavelets(self, flux_list=0, min=False, scale=False, tradeoff=2):
     """ Constructs a 2D wavelet-transform and then scales it appropriately for the uses in Schochet et al. 
 
     Args:
         self (pyasassn.LightCurve): a LightCurve object with which to perform the transform on 
-        flux_list (list): either the self.flux list of flux values, or an injected flux list
-        min (boolean): whether the transform should be min-masked (non-used method).
-        flux_list (boolean): whether the transform should be scaled 10x average power and capped at [0, 255] (non-used method). 
+        flux_list (list): either self.flux, or an injected flux list
+        min (boolean): whether the transform should be min-masked instead of NaN-masked and then -> 0. (False is NaN mask).
+        scale (boolean): whether the transform should be scaled 10x average power and capped at [0, 255] (False is not scaled 10x). 
         tradeoff (int): the same parameter as Γ from LS_wavelet
 
     Returns:
@@ -174,67 +114,22 @@ def wavelet_rebased(self, flux_list=0, min=False, scaled=False, tradeoff=2):
     no_nans = torch.nan_to_num(repooled, posinf=0, neginf=0)
     scaled_power = no_nans - no_nans.min()
     scaled_power2 = scaled_power * (255/scaled_power.max())
-    if (scaled==True):
+    if (scale==True):
         scaled_power3 = scaled_power2 * 10
         final_wavelet = torch.where(scaled_power3 > 255, 255, scaled_power3)
     else:
         final_wavelet = scaled_power2.numpy().astype("uint8")
     return final_wavelet
 
-def reduce(noisy_lc):
-    """ Apply the data cleaning reductions from Section 2 of Schochet et al. to a light curve
-
-    Args:
-        noisy_lc (pyasassn.LightCurve): a LightCurve object with which to reduce the data
-
-    Returns:
-        noisy_lc (pyasassn.LightCurve): the reduced LightCurve object
-
-    """
-
-    tmin = 2458485
-    tmax = 2460311
-    
-    noisy_lc.data = noisy_lc.data[noisy_lc.data["phot_filter"] == "g"]
-    noisy_lc.data = noisy_lc.data[noisy_lc.data["quality"] == "G"]
-    noisy_lc.data = noisy_lc.data[noisy_lc.data["mag_err"] < 99]
-    noisy_lc.data = noisy_lc.data[noisy_lc.data["jd"] >= tmin] 
-    noisy_lc.data = noisy_lc.data[noisy_lc.data["jd"] <= tmax]
-    
-    return noisy_lc
-
-def inject_flux(sim, lightcurve):
-    """ Inject a simulation into a template light curve given the simulation and lightkurve objects
-
-    Args:
-        sim (butterpy.LightCurve): a butterpy.LightCurve object that holds the simulated light curve 
-        lightcurve (pyasassn.LightCurve): a noise template.LightCurve object to inject simulation flux into
-
-    Returns:
-        new_flux (list): injected flux values, of the same length as lightcurve
-        
-    """
-    tmin = 2458485
-    tmax = 2460311
-    sim_window = (tmin <= sim.time) & (sim.time <= tmax)
-    sim_time = sim.time[sim_window]
-    sim_flux = sim.flux[sim_window]
-    new_flux = ((np.interp(lightcurve.jd, sim_time, sim_flux)) * lightcurve.flux) / np.median(sim_flux)
-    
-    return new_flux
-
-def plotter(wavelet, save=False, minimum = "not", scaled = "not"):
-    """ Plotting function for displaying the 2D transformations
+def plotter(wavelet, save=False):
+    """ Plotting function to display the 2D transformations
     
     Args:
-        wavelet (np.ndarray): output 2D transform from single_wavelet, or wavelet_rebased
+        wavelet (np.ndarray): output 2D transform from wavelets function
         save (boolean, Optional): whether or not the plotted figure should be saved
-        minimum (str, "not" or "yes"): whether the plotted transform is min-masked
-        scaled (str, "not" or "yes"): whether the plotted transform is 10x scaled
 
     Returns:
         None
-        
     """
     fig, ax = plt.subplots(figsize=(10,6), layout='constrained')
     
@@ -264,10 +159,48 @@ def plotter(wavelet, save=False, minimum = "not", scaled = "not"):
     ax2.set_yticks(ticks = ax.get_yticks(), labels=labels_time, weight='bold')
     ax2.set_ylabel("Period [day]", weight='bold')
     if(save==True):
-        if(scaled=="yes"):
-            plt.savefig("scaled10x_transformation.pdf")
-        elif(minimum=="yes"):
-            plt.savefig("minmask_transformation.pdf")
-        else:
-            plt.savefig("regular_transformation.pdf")
+        plt.savefig("transformation.pdf")
     plt.show()
+
+def reduce(noisy_lc):
+    """ Apply the data cleaning reductions from Section 2 of Schochet & Planet et al. (2025) to a light curve
+
+    Args:
+        noisy_lc (pyasassn.LightCurve): a LightCurve object with which to reduce the data
+
+    Returns:
+        noisy_lc (pyasassn.LightCurve): the reduced LightCurve object
+
+    """
+
+    tmin = 2458485
+    tmax = 2460311
+    
+    noisy_lc.data = noisy_lc.data[noisy_lc.data["phot_filter"] == "g"]
+    noisy_lc.data = noisy_lc.data[noisy_lc.data["quality"] == "G"]
+    noisy_lc.data = noisy_lc.data[noisy_lc.data["mag_err"] < 99]
+    noisy_lc.data = noisy_lc.data[noisy_lc.data["jd"] >= tmin] 
+    noisy_lc.data = noisy_lc.data[noisy_lc.data["jd"] <= tmax]
+    
+    return noisy_lc
+
+def inject_flux(sim, lightcurve):
+    """ Inject a simulation into a template light curve given the simulation and LightCurve objects. 
+    Algorithm from Appendix A of Schochet & Planet et al. (2025)
+
+    Args:
+        sim (butterpy.LightCurve): a butterpy.LightCurve object that holds the simulated light curve 
+        lightcurve (pyasassn.LightCurve): a noise template.LightCurve object to inject simulation flux into
+
+    Returns:
+        new_flux (list): injected flux values, of the same length as lightcurve
+        
+    """
+    tmin = 2458485
+    tmax = 2460311
+    sim_window = (tmin <= sim.time) & (sim.time <= tmax)
+    sim_time = sim.time[sim_window]
+    sim_flux = sim.flux[sim_window]
+    new_flux = ((np.interp(lightcurve.jd, sim_time, sim_flux)) * lightcurve.flux) / np.median(sim_flux)
+    
+    return new_flux
