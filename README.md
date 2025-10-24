@@ -2,6 +2,10 @@
 #### AKA: asas-sn-cnn
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15848601.svg)](https://doi.org/10.5281/zenodo.15848601) - for datafiles
 
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17387593.svg)](https://doi.org/10.5281/zenodo.17387593) - for Jupyter Notebooks (permalink)
+
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ### Primary Author and contact for issues: [Meir Schochet](mailto:schoche4@msu.edu)
