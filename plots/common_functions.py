@@ -52,7 +52,8 @@ def read_sim(sim_id, sim_dir='files', reset_time=True):
         lc (butterpy.LightCurve): A butterpy.LightCurve object (see https://github.com/zclaytor/butterpy/blob/main/butterpy/core.py)
     """
     tmin = 2458485
-    sim_path = os.path.join(sim_dir, f"{sim_id//1000:03.0f}", f"sim{sim_id:06d}.fits")
+    #sim_path = os.path.join(sim_dir, f"{sim_id//1000:03.0f}", f"sim{sim_id:06d}.fits")
+    sim_path = os.path.join(sim_dir, f"sim{sim_id:06d}.fits")
     lc = bp.read_fits(sim_path).lightcurve
     if reset_time:
         lc.time = lc.time - lc.time[0] + tmin
