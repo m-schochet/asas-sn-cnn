@@ -1,4 +1,4 @@
-# Code for "200,000+ Deep Learning--inferred Periods of Stellar Variability from The All-Sky Automated Survey for Supernovae"
+# Code for "200,000+ Deep Learning—inferred Periods of Stellar Variability from The All-Sky Automated Survey for Supernovae"
 #### AKA: asas-sn-cnn
 
 [![Static Badge](https://img.shields.io/badge/Access_The_Paper-maroon?logo=paperswithcode&link=https%3A%2F%2Fiopscience.iop.org%2Farticle%2F10.3847%2F1538-4365%2Fae1ba7)](https://iopscience.iop.org/article/10.3847/1538-4365/ae1ba7)     [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -47,7 +47,7 @@ If you use any of the programs in this repository or the associated catalog of s
        number = {1},
           eid = {10},
           doi = {10.3847/1538-4365/ae1ba7},
+       eprint = {2509.14423},
        adsurl = {https://ui.adsabs.harvard.edu/abs/2026ApJS..282...10S},
-      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
 }
 ```
