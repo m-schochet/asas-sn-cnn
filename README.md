@@ -1,5 +1,4 @@
 # Code for "200,000+ Deep Learning—inferred Periods of Stellar Variability from The All-Sky Automated Survey for Supernovae"
-#### AKA: asas-sn-cnn
 
 [![Static Badge](https://img.shields.io/badge/Access_The_Paper-maroon?logo=paperswithcode&link=https%3A%2F%2Fiopscience.iop.org%2Farticle%2F10.3847%2F1538-4365%2Fae1ba7)](https://iopscience.iop.org/article/10.3847/1538-4365/ae1ba7)     [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -18,7 +17,7 @@ Inside of this repository is a set of folders. Each of these folders are labeled
 ```
 [integer]-[name of workflow step]
 ```
-281
+
 Additionally, each of these workflow steps hosts pairs of .sh/.py files, with the assumption being that these jobs are run into a Linux scheduler. This also explains why contained in each .sh file is a line of:
 
 ```
